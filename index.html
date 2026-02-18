@@ -30,6 +30,7 @@
             user-select: none;
         }
 
+        /* Ambient Dust Particles */
         .dust {
             position: absolute;
             background: #fff;
@@ -43,7 +44,7 @@
         /* --- LAYOUT --- */
         #desk {
             display: flex;
-            gap: 40px;
+            gap: 50px;
             align-items: center;
             justify-content: center;
             perspective: 1500px;
@@ -57,8 +58,9 @@
         /* --- LEFT: THE BOARD --- */
         #board-container {
             position: relative;
+            /* Symmetrical perspective rotation */
             transform: rotateX(15deg) rotateY(5deg); 
-            transition: transform 0.4s ease;
+            transition: transform 0.4s ease-out;
             width: 540px; 
             height: 540px;
             flex-shrink: 0;
@@ -69,12 +71,13 @@
         }
         
         #board-frame {
+            /* THICK CHUNKY DIMENSIONS */
             box-shadow: 
                 -2px 2px 0 #281a16, -4px 4px 0 #1a110e,
                 2px 2px 0 #281a16, 4px 4px 0 #1a110e,
-                0 6px 0 #1a110e, 0 10px 30px rgba(0,0,0,0.8);
+                0 8px 0 #1a110e, 0 15px 40px rgba(0,0,0,0.8);
             background: #3e2723;
-            padding: 14px;
+            padding: 16px;
             border-radius: 12px;
             border: 1px solid #5d4037;
             position: relative;
@@ -91,20 +94,20 @@
             background: #000;
             cursor: pointer;
             touch-action: none;
-            transform: translateZ(5px);
+            transform: translateZ(10px); /* Lift above frame */
             border: 2px solid #281a16;
             border-radius: 4px;
         }
 
         #ui-status {
             position: absolute;
-            top: -60px; left: 0; width: 100%;
+            top: -70px; left: 0; width: 100%;
             text-align: center;
             font-size: 14px;
             color: #888;
             letter-spacing: 2px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-            transform: translateZ(50px);
+            transform: translateZ(60px);
             pointer-events: none;
         }
         #ui-status span { color: var(--accent); }
@@ -114,6 +117,7 @@
             width: 360px;
             height: 520px;
             position: relative;
+            /* Symmetrical Perspective Rotation */
             transform: rotateX(15deg) rotateY(-5deg); 
             transition: transform 0.5s ease;
             transform-style: preserve-3d;
@@ -143,12 +147,12 @@
             text-align: center;
             cursor: pointer;
             box-shadow: 
-                inset 12px 0 20px rgba(0,0,0,0.5),
+                inset 12px 0 20px rgba(0,0,0,0.5), /* Spine Shadow */
                 2px 2px 0 #281a16, 4px 4px 0 #1a110e,
                 15px 15px 40px rgba(0,0,0,0.6);
         }
         
-        #book-cover:hover { transform: rotateY(-10deg); }
+        #book-cover:hover { transform: rotateY(-12deg); }
 
         #book-cover::after {
             content:''; position: absolute; top:0; left:0; width:100%; height:100%;
@@ -203,6 +207,7 @@
 
         #book-container.open #book-cover { transform: rotateY(-180deg); }
 
+        /* Rules UI */
         .rule-num { 
             font-family: 'Press Start 2P', cursive;
             font-size: 36px; 
@@ -212,14 +217,14 @@
         
         .rule-title { font-size: 24px; font-weight: bold; border-bottom: 2px solid #3e2723; padding-bottom: 10px; margin-bottom: 20px; }
 
-        .rule-content-wrapper { transition: opacity 0.3s, transform 0.3s; }
-        .flipping { opacity: 0; transform: translateX(10px); }
+        #rule-content { transition: opacity 0.3s ease, transform 0.3s ease; }
+        .flipping { opacity: 0; transform: translateX(20px); }
 
-        .rule-text { font-size: 18px; line-height: 1.6; height: 200px; }
+        .rule-text { font-size: 18px; line-height: 1.6; min-height: 200px; }
         .rule-fluff { font-size: 14px; font-style: italic; color: #6d4c41; margin-top: 20px; text-align: right; }
 
         .nav-controls { display: flex; justify-content: space-between; margin-top: auto; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 10px; }
-        .book-btn { background: none; border: none; cursor: pointer; color: #5d4037; font-family: 'Press Start 2P', cursive; font-size: 10px; }
+        .book-btn { background: none; border: none; cursor: pointer; color: #5d4037; font-family: 'Press Start 2P', cursive; font-size: 10px; transition: color 0.2s; }
         .book-btn:hover { color: #bf360c; }
         .book-btn:disabled { color: #ccc; cursor: default; }
 
@@ -241,19 +246,23 @@
         .menu-btn {
             background: #3e2723; color: #eceff1; border: 4px solid #5d4037; padding: 20px 40px;
             font-family: 'Press Start 2P', cursive; font-size: 16px; margin: 10px; cursor: pointer;
-            width: 320px; transition: 0.1s; box-shadow: 0 8px 0 #281a16;
+            width: 320px; transition: 0.1s; box-shadow: 0 8px 0 #281a16; text-align: center;
         }
         .menu-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #281a16; }
 
-        /* --- MOBILE OVERRIDES --- */
-        @media (max-width: 650px) {
-            .menu-title { font-size: 20px; margin-bottom: 25px; }
-            .menu-btn { width: 220px; font-size: 10px; padding: 15px; }
-            .setting-row { flex-direction: column; gap: 5px; }
+        /* --- MOBILE OVERRIDES (landscape phone focus) --- */
+        @media (max-width: 750px) {
+            .menu-title { font-size: 24px; margin-bottom: 30px; }
+            .menu-btn { width: 240px; font-size: 12px; padding: 15px; }
+            #settings-modal .menu-title { font-size: 20px; }
         }
 
-        #dev-console { position: fixed; top: 0; left: 0; width: 100%; background: rgba(0,0,0,0.9); color: #0f0; padding: 10px; display: none; z-index: 9999; }
-        #dev-input { background: transparent; border: none; color: #0f0; width: 90%; outline: none; }
+        #dev-console { position: fixed; top: 0; left: 0; width: 100%; background: rgba(0,0,0,0.95); color: #0f0; padding: 12px; display: none; z-index: 9999; border-bottom: 2px solid #0f0; font-family: monospace; }
+        #dev-input { background: transparent; border: none; color: #0f0; width: 85%; outline: none; font-size: 16px; }
+
+        #overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100; display:none; justify-content:center; align-items:center; flex-direction:column; backdrop-filter: blur(10px); }
+        .victory-text { font-size:40px; color: #ffd700; text-shadow: 0 5px 0 #b26500; animation:bounce 1s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body>
@@ -267,15 +276,15 @@
 
 <div id="settings-modal" class="hidden">
     <div class="menu-title" style="font-size: 28px;">SETTINGS</div>
-    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px;">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 30px;">
         <span style="font-size: 12px; color: #aaa;">BOT INTEL:</span>
-        <button class="menu-btn" id="btn-difficulty" style="width: 180px; font-size: 12px; padding: 10px;" onclick="cycleDifficulty()">EASY</button>
+        <button class="menu-btn" id="btn-difficulty" style="width: 240px; font-size: 14px; padding: 15px;" onclick="cycleDifficulty()">EASY</button>
     </div>
     <button class="menu-btn" onclick="closeSettings()">BACK</button>
 </div>
 
 <div id="dev-console">
-    <span>ADMIN >> </span><input type="text" id="dev-input">
+    <span>ADMIN >> </span><input type="text" id="dev-input" placeholder="win, unlock, reset...">
 </div>
 
 <div id="desk">
@@ -292,13 +301,13 @@
                 <div class="cover-decor">
                     <div style="font-size: 60px; color: #ffb74d;">&#9818;</div>
                     <div class="cover-title">Rules<br>&<br>Chaos</div>
-                    <div style="font-size: 10px; color: #8d6e63;">[ CLICK TO OPEN ]</div>
+                    <div style="font-size: 10px; color: #8d6e63; font-family: 'Press Start 2P';">[ CLICK TO OPEN ]</div>
                 </div>
             </div>
             <div id="pages-layer">
                 <div id="pages">
                     <div id="bookmark" style="position:absolute; top:0; right:40px; width:20px; height:80px; background:#bf360c; clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%); z-index:10;"></div>
-                    <div class="rule-content-wrapper" id="rule-content">
+                    <div id="rule-content">
                         <div class="rule-num" id="page-num">00</div>
                         <div class="rule-title" id="page-title">RULE 00</div>
                         <div class="rule-text" id="page-desc">Loading...</div>
@@ -315,9 +324,9 @@
     </div>
 </div>
 
-<div id="overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100; display:none; justify-content:center; align-items:center; flex-direction:column;">
-    <div class="victory-text" id="overlay-title" style="font-size:40px; animation:bounce 1s infinite;">VICTORY</div>
-    <div id="overlay-sub" style="color:#fff; margin:20px 0 40px; font-family:'Crimson Text', serif; font-size:24px; font-style:italic;"></div>
+<div id="overlay">
+    <div class="victory-text" id="overlay-title">VICTORY</div>
+    <div id="overlay-sub" style="color:#fff; margin:20px 0 40px; font-family:'Crimson Text', serif; font-size:24px; font-style:italic; text-align: center;"></div>
     <button class="menu-btn" style="background:#4caf50; border-color:#fff;" onclick="nextLevel()">CONTINUE</button>
 </div>
 
@@ -325,17 +334,19 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
+    // Scaling Logic
     function fitScreen() {
         const desk = document.getElementById('desk');
-        const scale = Math.min(window.innerWidth / 1050, window.innerHeight / 700, 1);
+        const scale = Math.min(window.innerWidth / 1100, window.innerHeight / 750, 1);
         desk.style.transform = `scale(${scale * 0.95})`;
     }
     window.addEventListener('resize', fitScreen); fitScreen();
 
+    // Audio Boosted
     const Sfx = {
         ctx: null,
         init() { if(!this.ctx) { window.AudioContext = window.AudioContext || window.webkitAudioContext; this.ctx = new AudioContext(); } },
-        play(freq, type, dur, vol=0.5, slide=0) {
+        play(freq, type, dur, vol=0.8, slide=0) {
             if(!this.ctx) return;
             const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
             o.type = type; o.frequency.setValueAtTime(freq, this.ctx.currentTime);
@@ -345,6 +356,7 @@
         }
     };
 
+    // Game Vars
     let board = []; let turn = 'blue'; let selected = null; let validMoves = []; let mines = [];
     let gameMode = 'pve'; let botDifficulty = 0; let level = 1; let activeRules = ['standard']; let bookPage = 0;
     const SPRITES = {}; const TILE = 64;
@@ -368,11 +380,12 @@
 
     function startGame(mode) { 
         gameMode = mode; Sfx.init(); document.getElementById('main-menu').classList.add('hidden'); 
-        if(mode==='pve'){ level=1; activeRules=['standard']; } initLevel(); renderPage(); 
+        if(mode==='pve'){ level=1; activeRules=['standard']; } 
+        initLevel(); renderPage(); 
     }
 
-    function openBook() { document.getElementById('book-container').classList.add('open'); Sfx.play(100, 'sine', 0.5, 0.2, -50); }
-    function closeBook() { document.getElementById('book-container').classList.remove('open'); Sfx.play(120, 'sine', 0.4, 0.2, -30); }
+    function openBook() { document.getElementById('book-container').classList.add('open'); Sfx.play(100, 'sine', 0.5, 0.3, -50); }
+    function closeBook() { document.getElementById('book-container').classList.remove('open'); Sfx.play(120, 'sine', 0.4, 0.3, -30); }
 
     function initLevel() {
         board = Array(8).fill(null).map(() => Array(8).fill(null));
@@ -386,26 +399,39 @@
         mines = []; turn = 'blue'; updateUI();
     }
 
-    function getMoves(p, cx, cy, b = board) {
-        let moves = []; let dir = p.team === 'blue' ? -1 : 1;
-        const chk = (x,y) => x>=0&&x<8&&y>=0&&y<8 && b[y][x]===null;
-        const enemy = (x,y) => x>=0&&x<8&&y>=0&&y<8 && b[y][x] && b[y][x].team !== p.team;
+    // Logic Functions
+    function getMoves(p, cx, cy, targetBoard = board) {
+        let moves = []; 
+        let dir = p.team === 'blue' ? -1 : 1;
+        const chk = (x,y) => x>=0 && x<8 && y>=0 && y<8 && targetBoard[y][x] === null;
+        const enemy = (x,y) => x>=0 && x<8 && y>=0 && y<8 && targetBoard[y][x] && targetBoard[y][x].team !== p.team;
         
         if(p.type === 'pawn') {
             if(chk(cx, cy+dir)) moves.push({x:cx, y:cy+dir});
             if(((p.team==='blue'&&cy===6)||(p.team==='red'&&cy===1)) && chk(cx,cy+dir) && chk(cx, cy+dir*2)) moves.push({x:cx, y:cy+dir*2});
             if(enemy(cx+1, cy+dir)) moves.push({x:cx+1, y:cy+dir});
             if(enemy(cx-1, cy+dir)) moves.push({x:cx-1, y:cy+dir});
-            if(activeRules.includes('pawn_cardinal')) [[0,1],[0,-1],[1,0],[-1,0]].forEach(d=>{ if(chk(cx+d[0], cy+d[1])) moves.push({x:cx+d[0], y:cy+d[1]}); });
+            if(activeRules.includes('pawn_cardinal')) {
+                [[0,1],[0,-1],[1,0],[-1,0]].forEach(d => { if(chk(cx+d[0], cy+d[1])) moves.push({x:cx+d[0], y:cy+d[1]}); });
+            }
         } else if(p.type === 'knight') {
-            let j = activeRules.includes('jumper') ? [[3,1],[3,-1],[-3,1],[-3,-1],[1,3],[1,-3],[-1,3],[-1,-3]] : [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]];
-            j.forEach(d=>{ let tx=cx+d[0], ty=cy+d[1]; if(tx>=0&&tx<8&&ty>=0&&ty<8 && (b[ty][tx]===null || b[ty][tx].team!==p.team)) moves.push({x:tx, y:ty}); });
+            let jumps = activeRules.includes('jumper') ? [[3,1],[3,-1],[-3,1],[-3,-1],[1,3],[1,-3],[-1,3],[-1,-3]] : [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]];
+            jumps.forEach(d => {
+                let tx=cx+d[0], ty=cy+d[1];
+                if(tx>=0 && tx<8 && ty>=0 && ty<8 && (targetBoard[ty][tx]===null || targetBoard[ty][tx].team!==p.team)) moves.push({x:tx, y:ty});
+            });
         } else {
-            const slide = (dirs, dist) => dirs.forEach(d=>{ for(let i=1; i<=dist; i++){
-                let tx=cx+d[0]*i, ty=cy+d[1]*i; if(tx<0||tx>=8||ty<0||ty>=8) break;
-                if(b[ty][tx]===null) moves.push({x:tx, y:ty});
-                else { if(b[ty][tx].team!==p.team || (activeRules.includes('cannibal')&&p.type==='rook')) moves.push({x:tx, y:ty}); break; }
-            }});
+            const slide = (dirs, dist) => dirs.forEach(d => {
+                for(let i=1; i<=dist; i++){
+                    let tx=cx+d[0]*i, ty=cy+d[1]*i;
+                    if(tx<0||tx>=8||ty<0||ty>=8) break;
+                    if(targetBoard[ty][tx] === null) moves.push({x:tx, y:ty});
+                    else {
+                        if(targetBoard[ty][tx].team !== p.team || (activeRules.includes('cannibal') && p.type === 'rook')) moves.push({x:tx, y:ty});
+                        break;
+                    }
+                }
+            });
             if(p.type==='rook'||p.type==='queen') slide([[0,1],[0,-1],[1,0],[-1,0]], 8);
             if(p.type==='bishop'||p.type==='queen') slide([[1,1],[1,-1],[-1,1],[-1,-1]], 8);
             if(p.type==='king') slide([[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]], 1);
@@ -416,39 +442,77 @@
     function move(sx, sy, tx, ty) {
         let p = board[sy][sx]; let t = board[ty][tx];
         if(activeRules.includes('mines') && p.type === 'bishop') mines.push({x:sx, y:sy});
-        if(t) { Sfx.play(150, 'sawtooth', 0.2); if(activeRules.includes('mirror') && p.type === 'queen') board.reverse(); } else Sfx.play(200, 'triangle', 0.1);
-        board[ty][tx] = p; board[sy][sx] = null;
-        let mIdx = mines.findIndex(m=>m.x===tx && m.y===ty); if(mIdx !== -1) { board[ty][tx] = null; mines.splice(mIdx, 1); Sfx.play(50, 'square', 0.3); }
         
-        if(!findKing('blue')) endGame('red'); else if(!findKing('red')) endGame('blue');
+        if(t) { 
+            Sfx.play(150, 'sawtooth', 0.2, 0.6); 
+            if(activeRules.includes('mirror') && p.type === 'queen') board.reverse(); 
+        } else Sfx.play(200, 'triangle', 0.1, 0.4);
+        
+        board[ty][tx] = p; board[sy][sx] = null;
+        let mIdx = mines.findIndex(m => m.x===tx && m.y===ty);
+        if(mIdx !== -1) { 
+            board[ty][tx] = null; mines.splice(mIdx, 1); 
+            Sfx.play(50, 'square', 0.3, 0.8); 
+        }
+        
+        if(!findKing('blue')) endGame('red'); 
+        else if(!findKing('red')) endGame('blue');
         else {
-            turn = turn === 'blue' ? 'red' : 'blue'; updateUI();
-            if(gameMode === 'pve' && turn === 'red') setTimeout(botMove, 600);
+            turn = turn === 'blue' ? 'red' : 'blue'; 
+            updateUI();
+            if(gameMode === 'pve' && turn === 'red') setTimeout(botMove, 800);
         }
     }
 
-    function findKing(team) { for(let y=0;y<8;y++) for(let x=0;x<8;x++) if(board[y][x]?.team===team && board[y][x]?.type==='king') return true; return false; }
+    function findKing(team) { 
+        for(let y=0;y<8;y++) for(let x=0;x<8;x++) if(board[y][x]?.team===team && board[y][x]?.type==='king') return true; 
+        return false; 
+    }
+
     function endGame(winner) {
-        Sfx.play(500, 'sine', 0.5);
+        Sfx.play(500, 'sine', 0.5, 0.4);
         document.getElementById('overlay-title').innerText = (winner==='blue' || gameMode==='pvp') ? "VICTORY" : "DEFEAT";
         document.getElementById('overlay-title').style.color = (winner==='blue') ? COLORS.gold : COLORS.red;
         if(gameMode === 'pve' && winner === 'blue') {
-            let r = RULES[level]; if(r) { document.getElementById('overlay-sub').innerText = `UNLOCKED: RULE ${r.num}`; activeRules.push(r.id); }
-        } else document.getElementById('overlay-sub').innerText = `${winner.toUpperCase()} WINS THE DUEL`;
+            let r = RULES[level]; 
+            if(r) { 
+                document.getElementById('overlay-sub').innerText = `UNLOCKED: RULE ${r.num}`; 
+                if (!activeRules.includes(r.id)) activeRules.push(r.id); 
+            }
+        } else {
+            document.getElementById('overlay-sub').innerText = `${winner.toUpperCase()} WINS THE DUEL`;
+        }
         document.getElementById('overlay').style.display = 'flex';
     }
 
-    function nextLevel() { if(gameMode==='pve') { level++; bookPage = activeRules.length - 1; renderPage(); } document.getElementById('overlay').style.display='none'; initLevel(); }
+    function nextLevel() { 
+        if(gameMode==='pve' && document.getElementById('overlay-title').innerText === "VICTORY") { 
+            level++; bookPage = activeRules.length - 1; renderPage(); 
+        } 
+        document.getElementById('overlay').style.display='none'; 
+        initLevel(); 
+    }
 
     function draw() {
         ctx.fillStyle = '#000'; ctx.fillRect(0,0,512,512);
-        for(let y=0; y<8; y++) for(let x=0; x<8; x++) {
-            ctx.fillStyle = (x+y)%2 ? COLORS.dark : COLORS.light;
-            if(selected?.x===x && selected?.y===y) ctx.fillStyle = COLORS.highlight;
-            if(validMoves.some(m=>m.x===x && m.y===y)) ctx.fillStyle = COLORS.hint;
-            ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
-            if(mines.some(m=>m.x===x && m.y===y)) { ctx.fillStyle='#d32f2f'; ctx.fillRect(x*TILE+24,y*TILE+24,16,16); }
-            let p = board[y][x]; if(p) ctx.drawImage(SPRITES[p.team][p.type], x*TILE, y*TILE + Math.sin(Date.now()/200 + p.id*10)*2);
+        for(let y=0; y<8; y++) {
+            for(let x=0; x<8; x++) {
+                ctx.fillStyle = (x+y)%2 ? COLORS.dark : COLORS.light;
+                if(selected?.x===x && selected?.y===y) ctx.fillStyle = COLORS.highlight;
+                if(validMoves.some(m=>m.x===x && m.y===y)) ctx.fillStyle = COLORS.hint;
+                ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
+                
+                if(mines.some(m=>m.x===x && m.y===y)) { 
+                    ctx.fillStyle='#d32f2f'; ctx.beginPath(); ctx.arc(x*TILE+32, y*TILE+32, 10, 0, Math.PI*2); ctx.fill(); 
+                }
+                
+                let p = board[y][x]; 
+                if(p) ctx.drawImage(SPRITES[p.team][p.type], x*TILE, y*TILE + Math.sin(Date.now()/200 + p.id*10)*3);
+                
+                if(validMoves.some(m=>m.x===x && m.y===y)) { 
+                    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.arc(x*TILE+32, y*TILE+32, 6, 0, Math.PI*2); ctx.fill(); 
+                }
+            }
         }
         requestAnimationFrame(draw);
     }
@@ -459,19 +523,42 @@
         const isSelectable = p && (p.team === turn || (activeRules.includes('traitor') && p.type === 'queen'));
         
         if(selected) {
-            let m = validMoves.find(mv=>mv.x===x && mv.y===y);
-            if(m) { move(selected.x, selected.y, x, y); selected = null; validMoves = []; }
-            else { selected = isSelectable ? {x,y} : null; validMoves = selected ? getMoves(board[y][x], x, y) : []; }
-        } else if(isSelectable) { selected = {x,y}; validMoves = getMoves(p, x, y); }
+            let m = validMoves.find(mv => mv.x===x && mv.y===y);
+            if(m) { 
+                move(selected.x, selected.y, x, y); 
+                selected = null; validMoves = []; 
+            } else { 
+                selected = isSelectable ? {x,y} : null; 
+                validMoves = selected ? getMoves(board[y][x], x, y) : []; 
+            }
+        } else if(isSelectable) { 
+            selected = {x,y}; validMoves = getMoves(p, x, y); 
+        }
     }
 
-    canvas.addEventListener('mousedown', e => { if(gameMode==='pve'&&turn==='red')return; handleInput(Math.floor(e.offsetX/(canvas.clientWidth/8)), Math.floor(e.offsetY/(canvas.clientHeight/8))); });
-    canvas.addEventListener('touchstart', e => { e.preventDefault(); const r=canvas.getBoundingClientRect(); handleInput(Math.floor((e.touches[0].clientX-r.left)/r.width*8), Math.floor((e.touches[0].clientY-r.top)/r.height*8)); }, {passive:false});
+    canvas.addEventListener('mousedown', e => { 
+        if(gameMode==='pve' && turn==='red') return; 
+        const rect = canvas.getBoundingClientRect();
+        // Use precision mapping for the board
+        handleInput(Math.floor(e.offsetX / (canvas.clientWidth/8)), Math.floor(e.offsetY / (canvas.clientHeight/8))); 
+    });
 
-    function updateUI() { document.getElementById('level-num').innerText = level; document.getElementById('turn-text').innerText = turn==='blue'?"BLUE TURN":"RED TURN"; document.getElementById('turn-text').style.color = turn==='blue'?COLORS.blue:COLORS.red; }
+    canvas.addEventListener('touchstart', e => { 
+        e.preventDefault(); 
+        const r = canvas.getBoundingClientRect(); 
+        const touch = e.touches[0];
+        handleInput(Math.floor((touch.clientX-r.left)/r.width*8), Math.floor((touch.clientY-r.top)/r.height*8)); 
+    }, {passive:false});
+
+    function updateUI() { 
+        document.getElementById('level-num').innerText = level; 
+        document.getElementById('turn-text').innerText = turn==='blue'?"BLUE TURN":"RED TURN"; 
+        document.getElementById('turn-text').style.color = turn==='blue'?COLORS.blue:COLORS.red; 
+    }
 
     function renderPage() {
-        const wrap = document.getElementById('rule-content'); wrap.classList.add('flipping');
+        const wrap = document.getElementById('rule-content'); 
+        wrap.classList.add('flipping');
         setTimeout(() => {
             let r = RULES.find(rule => rule.id === activeRules[bookPage]) || RULES[0];
             document.getElementById('page-num').innerText = r.num;
@@ -484,42 +571,92 @@
             wrap.classList.remove('flipping');
         }, 300);
     }
-    function prevPage() { if(bookPage > 0) { bookPage--; Sfx.play(800,'sine',0.1); renderPage(); } else closeBook(); }
-    function nextPage() { if(bookPage < activeRules.length-1) { bookPage++; Sfx.play(800,'sine',0.1); renderPage(); } }
+    
+    function prevPage() { if(bookPage > 0) { bookPage--; Sfx.play(800,'sine',0.1, 0.2); renderPage(); } else closeBook(); }
+    function nextPage() { if(bookPage < activeRules.length-1) { bookPage++; Sfx.play(800,'sine',0.1, 0.2); renderPage(); } }
 
+    // --- ENHANCED BOT INTELLIGENCE ---
     function botMove() {
-        let pieces = []; for(let y=0;y<8;y++) for(let x=0;x<8;x++) if(board[y][x]?.team==='red') pieces.push({x,y,p:board[y][x]});
+        let pieces = []; 
+        for(let y=0;y<8;y++) for(let x=0;x<8;x++) if(board[y][x]?.team==='red') pieces.push({x,y,p:board[y][x]});
+        
         if(botDifficulty === 0) { 
             pieces.sort(()=>Math.random()-0.5); 
-            for(let pc of pieces) { let m=getMoves(pc.p,pc.x,pc.y); if(m.length){ let pick=m[Math.floor(Math.random()*m.length)]; move(pc.x,pc.y,pick.x,pick.y); return; }}
-        } else {
-            let bestVal = -9999; let bestM = null;
-            for(let pc of pieces) {
-                let mvs = getMoves(pc.p, pc.x, pc.y);
-                for(let m of mvs) {
-                    let oldVal = evaluate(board, 'red');
-                    let target = board[m.y][m.x]; let source = board[pc.y][pc.x]; board[m.y][m.x] = source; board[pc.y][pc.x] = null;
-                    let val = evaluate(board, 'red') - (botDifficulty > 1 ? evaluate(board, 'blue')*1.1 : 0);
-                    board[pc.y][pc.x] = source; board[m.y][m.x] = target;
-                    if(val > bestVal) { bestVal = val; bestM = {sx:pc.x, sy:pc.y, tx:m.x, ty:m.y}; }
-                }
+            for(let pc of pieces) { 
+                let m = getMoves(pc.p, pc.x, pc.y); 
+                if(m.length) { 
+                    let pick = m[Math.floor(Math.random()*m.length)]; 
+                    move(pc.x, pc.y, pick.x, pick.y); 
+                    return; 
+                } 
             }
-            if(bestM) move(bestM.sx, bestM.sy, bestM.tx, bestM.ty);
+        } else {
+            // Advanced Bot Search
+            let bestMove = minimax(board, botDifficulty === 1 ? 1 : (botDifficulty === 2 ? 2 : 3), true, -Infinity, Infinity);
+            if(bestMove && bestMove.move) {
+                move(bestMove.move.sx, bestMove.move.sy, bestMove.move.tx, bestMove.move.ty);
+            }
         }
+    }
+
+    function minimax(currBoard, depth, isMaximizing, alpha, beta) {
+        if(depth === 0) return { score: evaluate(currBoard, 'red') };
+        
+        let pieces = [];
+        for(let y=0; y<8; y++) for(let x=0; x<8; x++) {
+            let p = currBoard[y][x];
+            if(p && p.team === (isMaximizing ? 'red' : 'blue')) pieces.push({x,y,p});
+        }
+        
+        let best = isMaximizing ? -Infinity : Infinity;
+        let selectedMove = null;
+
+        for(let pc of pieces) {
+            let mvs = getMoves(pc.p, pc.x, pc.y, currBoard);
+            for(let m of mvs) {
+                // Simulate
+                let target = currBoard[m.y][m.x];
+                let source = currBoard[pc.y][pc.x];
+                currBoard[m.y][m.x] = source;
+                currBoard[pc.y][pc.x] = null;
+                
+                let res = minimax(currBoard, depth - 1, !isMaximizing, alpha, beta);
+                
+                // Undo
+                currBoard[pc.y][pc.x] = source;
+                currBoard[m.y][m.x] = target;
+
+                if(isMaximizing) {
+                    if(res.score > best) { best = res.score; selectedMove = {sx:pc.x, sy:pc.y, tx:m.x, ty:m.y}; }
+                    alpha = Math.max(alpha, best);
+                } else {
+                    if(res.score < best) { best = res.score; selectedMove = {sx:pc.x, sy:pc.y, tx:m.x, ty:m.y}; }
+                    beta = Math.min(beta, best);
+                }
+                if (beta <= alpha) break;
+            }
+        }
+        return { score: best, move: selectedMove };
     }
 
     function evaluate(b, team) {
-        let s = 0; const vals = { pawn:10, knight:30, bishop:30, rook:50, queen:90, king:900 };
+        let score = 0; 
+        const vals = { pawn:10, knight:30, bishop:30, rook:50, queen:90, king:900 };
         for(let y=0; y<8; y++) for(let x=0; x<8; x++) {
-            let p = b[y][x]; if(p?.team===team) {
-                s += vals[p.type];
-                if(p.type==='pawn') s += (team==='red' ? y : 7-y) * 2;
-                if(x>2 && x<5 && y>2 && y<5) s += 5; 
+            let p = b[y][x]; 
+            if(p) {
+                let val = vals[p.type] || 0;
+                // Piece-Square Tables (Simple)
+                if(p.type === 'pawn') val += (p.team==='red' ? y : 7-y);
+                if(x > 2 && x < 5 && y > 2 && y < 5) val += 5; // Center control
+                
+                score += (p.team === 'red' ? val : -val);
             }
         }
-        return s;
+        return score;
     }
 
+    // Sprite Generation
     function generateSprites() {
         ['blue', 'red'].forEach(team => {
             SPRITES[team] = {};
@@ -540,11 +677,20 @@
     }
 
     generateSprites(); initLevel(); draw();
+    
+    // Dev Console
     document.addEventListener('keydown', (e) => {
-        if(e.key === '`' || e.key === '~') { e.preventDefault(); let c = document.getElementById('dev-console'); c.style.display = c.style.display==='block'?'none':'block'; }
+        if(e.key === '`' || e.key === '~') { 
+            e.preventDefault(); 
+            let c = document.getElementById('dev-console'); 
+            c.style.display = c.style.display==='block'?'none':'block'; 
+            if (c.style.display === 'block') document.getElementById('dev-input').focus();
+        }
         if(e.key === 'Enter' && document.getElementById('dev-console').style.display==='block') {
-            let cmd = document.getElementById('dev-input').value;
-            if(cmd==='win') endGame('blue'); if(cmd==='unlock') { activeRules=RULES.map(r=>r.id); renderPage(); }
+            let cmd = document.getElementById('dev-input').value.toLowerCase().trim();
+            if(cmd==='win') endGame('blue'); 
+            if(cmd==='unlock') { activeRules=RULES.map(r=>r.id); renderPage(); }
+            if(cmd==='reset') { location.reload(); }
             document.getElementById('dev-input').value = '';
         }
     });
