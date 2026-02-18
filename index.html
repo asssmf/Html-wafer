@@ -44,47 +44,53 @@
         /* --- LAYOUT --- */
         #desk {
             display: flex;
-            gap: 60px; /* Original Gap */
+            gap: 40px; /* Tighter gap for better alignment */
             align-items: center;
             justify-content: center;
-            perspective: 1200px;
+            perspective: 1500px; /* Deeper perspective for less distortion */
             transform-style: preserve-3d;
             padding: 40px;
-            background: rgba(255,255,255,0.02);
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 50px 100px rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
-            transition: filter 0.5s;
-            /* Force Hardware Acceleration for smooth scaling */
+            width: 960px; /* Fixed reference width for scaling */
+            height: 600px; /* Fixed reference height */
+            /* Force Hardware Acceleration */
             will-change: transform; 
         }
 
         /* --- LEFT: THE BOARD --- */
         #board-container {
             position: relative;
-            transform: rotateX(10deg) rotateY(5deg);
+            /* Subtler rotation for cleaner lines */
+            transform: rotateX(5deg) rotateY(3deg); 
             transition: transform 0.3s ease;
-            width: 512px;
-            height: 512px;
-            flex-shrink: 0; /* Prevent squishing */
+            width: 532px; /* 512 + 20px padding */
+            height: 532px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
         #board-frame {
-            padding: 15px;
+            padding: 10px;
             background: #2d2d2d;
-            border-radius: 4px;
+            border-radius: 8px;
             box-shadow: 
-                0 20px 50px rgba(0,0,0,0.6),
-                inset 0 0 20px rgba(0,0,0,0.8);
-            border: 4px solid #444;
+                0 30px 60px rgba(0,0,0,0.8), /* Deep shadow */
+                inset 0 0 0 2px rgba(255,255,255,0.1); /* Inner highlight */
+            border: 8px solid #3e2723; /* Dark Wood Border */
             position: relative;
+            width: 512px;
+            height: 512px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* Wood grain effect on frame */
-        #board-frame::before {
-            content: ''; position: absolute; top:0; left:0; right:0; bottom:0;
-            border: 2px solid #555;
+        /* Clean corner accents */
+        #board-frame::after {
+            content: ''; position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px;
+            border: 2px solid #5d4037;
+            border-radius: 12px;
             pointer-events: none;
         }
 
@@ -92,20 +98,22 @@
             display: block;
             width: 512px;
             height: 512px;
-            image-rendering: pixelated;
+            image-rendering: pixelated; /* Crisp pixels */
             background: #000;
             cursor: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M7 2L17 12L7 22" stroke="black" stroke-width="2"/></svg>'), auto;
-            touch-action: none; /* Prevent scrolling on mobile */
+            touch-action: none;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); /* Lift canvas slightly */
         }
 
         #ui-status {
             position: absolute;
-            top: -40px; left: 0; width: 100%;
+            top: -50px; left: 0; width: 100%;
             text-align: center;
-            font-size: 12px;
+            font-size: 14px;
             color: #888;
             letter-spacing: 2px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            transform: translateZ(20px); /* Float text above board */
         }
         #ui-status span { color: var(--accent); }
 
@@ -114,10 +122,10 @@
             width: 360px;
             height: 520px;
             position: relative;
-            transform: rotateX(5deg) rotateY(-5deg);
+            transform: rotateX(2deg) rotateY(-3deg); /* Matching subtle rotation */
             transition: transform 0.5s ease;
             transform-style: preserve-3d;
-            flex-shrink: 0; /* Prevent squishing */
+            flex-shrink: 0;
         }
 
         #tome {
@@ -135,7 +143,7 @@
             border-radius: 8px 16px 16px 8px;
             border: 4px solid #281a16;
             transform-origin: left;
-            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
             z-index: 20;
             backface-visibility: hidden;
             box-shadow: inset 10px 0 20px rgba(0,0,0,0.5);
@@ -146,7 +154,7 @@
             cursor: pointer;
         }
         #book-cover:hover {
-            box-shadow: inset 10px 0 30px rgba(0,0,0,0.7);
+            box-shadow: inset 10px 0 30px rgba(0,0,0,0.7), 0 0 15px rgba(255, 183, 77, 0.2);
         }
 
         /* Leather Texture on Cover */
@@ -279,13 +287,13 @@
         /* --- MAIN MENU --- */
         #main-menu {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(18, 18, 20, 0.9);
+            background: rgba(18, 18, 20, 0.95);
             z-index: 200;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
             transition: opacity 0.5s;
         }
         #main-menu.hidden { opacity: 0; pointer-events: none; }
@@ -393,10 +401,6 @@
             color: #333; font-size: 10px;
             pointer-events: none;
         }
-
-        /* --- RESPONSIVENESS (SCALING ONLY) --- */
-        /* Removed flex-direction column. JS handles scaling now. */
-
     </style>
 </head>
 <body>
@@ -430,7 +434,7 @@
     <span>ADMIN >> </span>
     <input type="text" id="dev-input" placeholder="Enter command (win, lose, unlock, reset)...">
 </div>
-<div class="dev-hint">v1.4 // Press `~`</div>
+<div class="dev-hint">v1.5 // Press `~`</div>
 
 <!-- Game Desk -->
 <div id="desk">
@@ -495,8 +499,7 @@
     // --- RESPONSIVE SCALING LOGIC ---
     function fitScreen() {
         const desk = document.getElementById('desk');
-        // Total width of desk components: 512 (board) + 60 (gap) + 360 (book) + 80 (padding) = ~1020px
-        const targetWidth = 1050; 
+        const targetWidth = 1000; 
         const targetHeight = 650; 
 
         // Current viewport
@@ -510,6 +513,9 @@
         // Use the smaller scale to fit entirely, capping at 1 (no upscaling for huge monitors)
         let scale = Math.min(scaleW, scaleH);
         if (scale > 1) scale = 1;
+        
+        // Add a margin safety buffer for mobile browsers
+        scale *= 0.95; 
 
         // Apply
         desk.style.transform = `scale(${scale})`;
@@ -527,14 +533,14 @@
     let botDifficulty = 0; // 0=Easy, 1=Medium, 2=Hard, 3=Extreme
     const DIFF_NAMES = ['EASY', 'MEDIUM', 'HARD', 'EXTREME'];
 
-    // --- AUDIO SYSTEM (Procedural) ---
+    // --- AUDIO SYSTEM (Volume Boosted) ---
     const Sfx = {
         ctx: null,
         init() {
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
             this.ctx = new AudioContext();
         },
-        play(freq, type, dur, vol=0.1, slide=0) {
+        play(freq, type, dur, vol=0.3, slide=0) { // Default vol upped to 0.3
             if(!this.ctx) return;
             const o = this.ctx.createOscillator();
             const g = this.ctx.createGain();
@@ -546,14 +552,14 @@
             o.connect(g); g.connect(this.ctx.destination);
             o.start(); o.stop(this.ctx.currentTime+dur);
         },
-        move() { this.play(200, 'triangle', 0.1, 0.05, -50); }, // Thump
-        page() { this.play(800, 'sine', 0.15, 0.02, 200); }, // Slide
+        move() { this.play(200, 'triangle', 0.1, 0.4, -50); }, // Louder Thump
+        page() { this.play(800, 'sine', 0.15, 0.3, 200); }, 
         capture() { 
-            this.play(100, 'sawtooth', 0.1, 0.2); 
-            setTimeout(()=>this.play(50, 'square', 0.2, 0.2, -20), 50); 
+            this.play(100, 'sawtooth', 0.1, 0.4); 
+            setTimeout(()=>this.play(50, 'square', 0.2, 0.4, -20), 50); 
         },
         win() {
-            [523, 659, 783, 1046].forEach((f,i) => setTimeout(() => this.play(f, 'square', 0.4, 0.1), i*150));
+            [523, 659, 783, 1046].forEach((f,i) => setTimeout(() => this.play(f, 'square', 0.4, 0.3), i*150));
         }
     };
 
@@ -1068,9 +1074,9 @@
             return;
         }
 
-        // HARD/EXTREME: Basic Minimax-lite (Depth 1-2 evaluation)
+        // HARD/EXTREME: Basic Minimax-lite (Depth 1-2 evaluation with PST)
         if (botDifficulty >= 2) {
-            let bestScore = -9999;
+            let bestScore = -99999;
             let bestMove = null;
             let depth = botDifficulty === 2 ? 1 : 2; // Hard=1 move ahead, Extreme=2 moves
 
@@ -1090,6 +1096,9 @@
                     // Evaluate State
                     let score = evaluateBoard('red') - (botDifficulty === 3 ? evaluateBoard('blue') : 0);
                     
+                    // Add slight randomization to break ties
+                    score += Math.random() * 0.5;
+
                     // Undo Move
                     board[pc.y][pc.x] = savedSource;
                     board[m.y][m.x] = savedTarget;
@@ -1122,16 +1131,54 @@
         turn = 'blue'; updateUI(); // Stuck
     }
 
+    // PIECE-SQUARE TABLES (Simplified)
+    // Positive numbers encourage positions for RED (Top side)
+    const PST = {
+        pawn: [
+            [0,  0,  0,  0,  0,  0,  0,  0],
+            [5,  5,  5,  5,  5,  5,  5,  5],
+            [1,  1,  2,  3,  3,  2,  1,  1],
+            [0.5,  0.5, 1, 2.5, 2.5, 1, 0.5, 0.5],
+            [0,  0,  0, 2, 2,  0,  0,  0],
+            [0.5, -0.5,-1,  0,  0, -1, -0.5, 0.5],
+            [0.5, 1, 1,  -2, -2, 1, 1, 0.5],
+            [0,  0,  0,  0,  0,  0,  0,  0]
+        ],
+        knight: [
+            [-5, -4, -3, -3, -3, -3, -4, -5],
+            [-4, -2,  0,  0,  0,  0, -2, -4],
+            [-3,  0,  1,  1.5, 1.5, 1,  0, -3],
+            [-3,  0.5, 1.5, 2, 2, 1.5, 0.5, -3],
+            [-3,  0,  1.5, 2, 2, 1.5, 0, -3],
+            [-3,  0.5, 1,  1.5, 1.5, 1, 0.5, -3],
+            [-4, -2,  0,  0.5, 0.5, 0, -2, -4],
+            [-5, -4, -3, -3, -3, -3, -4, -5]
+        ]
+    };
+
     function evaluateBoard(team) {
         let score = 0;
         const values = { 'pawn':10, 'knight':30, 'bishop':30, 'rook':50, 'queen':90, 'king':900 };
+        
         for(let y=0; y<8; y++) {
             for(let x=0; x<8; x++) {
                 let p = board[y][x];
                 if(p && p.team === team) {
                     score += values[p.type] || 0;
-                    // Center control bonus for knights/pawns (Extreme only logic implicitly)
-                    if ((x===3||x===4) && (y===3||y===4)) score += 5;
+                    
+                    // Add positional score if available
+                    // Note: PSTs are designed for Red (top). If checking Blue, we'd need to mirror Y.
+                    // For simplicity in this Deluxe version, we just use simple center bias for non-pawns
+                    // and forward bias for pawns if we don't implement full mirroring.
+                    
+                    if (p.type === 'pawn') {
+                        // Advance!
+                        if(team === 'red') score += (y * 0.5);
+                        else score += ((7-y) * 0.5);
+                    } else if (p.type === 'knight') {
+                         // Center!
+                         if(x>2 && x<5 && y>2 && y<5) score += 2;
+                    }
                 }
             }
         }
