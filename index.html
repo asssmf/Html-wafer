@@ -2,616 +2,627 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cozy Chaos Chess: Campaign</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cozy Chaos Chess: Deluxe</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Crimson+Text:ital,wght@0,600;1,600&display=swap');
 
         :root {
-            --bg: #1a1a2e;
-            --panel: #252540;
-            --gold: #ffd700;
-            --text: #fff;
-            --accent: #4da6ff;
+            --bg-color: #121214;
+            --wood-dark: #3e2723;
+            --wood-light: #5d4037;
+            --accent: #ffb74d;
+            --text-main: #eceff1;
         }
 
         body {
-            background-color: var(--bg);
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at center, #1c1c24 0%, #000000 100%);
             margin: 0;
+            height: 100vh;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
             font-family: 'Press Start 2P', cursive;
-            color: var(--text);
-            height: 100vh;
+            color: var(--text-main);
             overflow: hidden;
             user-select: none;
-            touch-action: none;
         }
 
-        /* --- GAME CONTAINER --- */
-        #game-container {
+        /* Ambient Dust Particles (CSS) */
+        .dust {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: float 10s infinite linear;
+            pointer-events: none;
+        }
+        @keyframes float { 0% { transform: translateY(0); opacity:0; } 50% { opacity:0.1; } 100% { transform: translateY(-100vh); opacity:0; } }
+
+        /* --- LAYOUT --- */
+        #desk {
+            display: flex;
+            gap: 60px;
+            align-items: center;
+            perspective: 1200px;
+            transform-style: preserve-3d;
+            padding: 40px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        /* --- LEFT: THE BOARD --- */
+        #board-container {
             position: relative;
-            width: 100%;
-            max-width: 500px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.1s;
+            transform: rotateX(10deg) rotateY(5deg);
+            transition: transform 0.3s ease;
         }
-
-        /* --- TOP BAR --- */
-        #top-ui {
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(0,0,0,0.3);
-            border-bottom: 2px solid #333;
-        }
-        .stat { font-size: 10px; color: #aaa; }
-        .stat span { color: var(--gold); }
-
-        /* --- BOARD --- */
-        #board-wrapper {
-            width: 100%;
-            aspect-ratio: 1/1;
-            position: relative;
-            background: #000;
-            border-bottom: 4px solid #111;
-        }
-        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
-
-        /* --- BOTTOM UI (Book Toggle) --- */
-        #bottom-ui {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        #book-btn {
-            background: #5c3c28; /* Leather */
-            color: #e0d5b0; /* Paper */
-            border: 4px solid #3e281a;
-            padding: 15px 30px;
-            font-family: inherit;
-            font-size: 12px;
-            cursor: pointer;
-            box-shadow: 0 6px 0 #2a1a10;
-            transition: transform 0.1s;
-            text-transform: uppercase;
-        }
-        #book-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #2a1a10; }
-
-        /* --- OVERLAYS --- */
-        .overlay {
-            position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.95);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .hidden { display: none !important; }
-
-        /* --- THE RULEBOOK --- */
-        #rulebook-overlay { background: rgba(0,0,0,0.8); }
         
-        #book-spine {
-            width: 300px;
-            height: 450px;
-            background: #e6e2d1; /* Paper */
-            border: 8px solid #5c3c28; /* Leather Cover */
+        #board-frame {
+            padding: 15px;
+            background: #2d2d2d;
             border-radius: 4px;
+            box-shadow: 
+                0 20px 50px rgba(0,0,0,0.6),
+                inset 0 0 20px rgba(0,0,0,0.8);
+            border: 4px solid #444;
             position: relative;
-            box-shadow: 10px 10px 20px rgba(0,0,0,0.5);
+        }
+
+        /* Wood grain effect on frame */
+        #board-frame::before {
+            content: ''; position: absolute; top:0; left:0; right:0; bottom:0;
+            border: 2px solid #555;
+            pointer-events: none;
+        }
+
+        canvas {
+            display: block;
+            width: 512px;
+            height: 512px;
+            image-rendering: pixelated;
+            background: #000;
+            cursor: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M7 2L17 12L7 22" stroke="black" stroke-width="2"/></svg>'), auto;
+        }
+
+        #ui-status {
+            position: absolute;
+            top: -40px; left: 0; width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+        #ui-status span { color: var(--accent); }
+
+        /* --- RIGHT: THE TOME --- */
+        #book-container {
+            width: 360px;
+            height: 520px;
+            position: relative;
+            transform: rotateX(5deg) rotateY(-5deg);
+            transition: transform 0.3s ease;
+        }
+
+        #tome {
+            width: 100%; height: 100%;
+            background: #3e2723; /* Deep Leather */
+            border-radius: 8px 16px 16px 8px;
+            box-shadow: 
+                inset 5px 0 10px rgba(0,0,0,0.5),
+                10px 20px 40px rgba(0,0,0,0.6);
             display: flex;
             flex-direction: column;
-            color: #3e281a;
+            border: 4px solid #281a16;
+            position: relative;
             overflow: hidden;
         }
 
-        .page {
-            padding: 20px;
+        /* Book Texture */
+        #tome::after {
+            content:''; position: absolute; top:0; left:0; width:100%; height:100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        #pages {
+            background: #fdf6e3; /* Cream Paper */
+            margin: 15px 15px 15px 25px;
             flex: 1;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.1);
+            position: relative;
+            padding: 30px;
             display: flex;
             flex-direction: column;
-            animation: flipIn 0.4s ease-out;
+            font-family: 'Crimson Text', serif; /* Readable font for rules */
+            color: #2c1a16;
+            overflow: hidden;
         }
 
-        .rule-number {
-            font-size: 40px;
-            opacity: 0.1;
+        /* Bookmark */
+        #bookmark {
             position: absolute;
-            top: 10px; right: 20px;
-            font-weight: bold;
+            top: 0; right: 40px;
+            width: 20px; height: 80px;
+            background: #bf360c;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            z-index: 10;
         }
 
-        .rule-title { font-size: 16px; margin-bottom: 20px; border-bottom: 2px dashed #5c3c28; padding-bottom: 10px; }
-        .rule-desc { font-size: 10px; line-height: 1.8; flex: 1; }
-        .flavor-text { font-size: 8px; font-style: italic; color: #888; margin-top: 10px; }
+        .rule-num { 
+            font-family: 'Press Start 2P', cursive;
+            font-size: 36px; 
+            color: rgba(62, 39, 35, 0.15); 
+            position: absolute; top: 20px; right: 20px;
+            z-index: 0;
+        }
         
-        .nav-btns {
+        .rule-title {
+            font-size: 24px;
+            font-weight: bold;
+            border-bottom: 2px solid #3e2723;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .rule-text {
+            font-size: 18px;
+            line-height: 1.6;
+            flex: 1;
+            z-index: 1;
+        }
+
+        .rule-fluff {
+            font-size: 14px;
+            font-style: italic;
+            color: #6d4c41;
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .nav-controls {
             display: flex;
             justify-content: space-between;
-            padding: 10px;
-            background: #d4cfbe;
-            border-top: 2px solid #5c3c28;
+            margin-top: auto;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            padding-top: 10px;
+            font-family: 'Press Start 2P', cursive;
         }
-        .nav-btn {
+
+        .book-btn {
             background: none; border: none;
-            color: #5c3c28; font-family: inherit; font-size: 10px; cursor: pointer;
-            text-transform: uppercase; font-weight: bold;
+            cursor: pointer;
+            color: #5d4037;
+            font-size: 12px;
+            transition: color 0.2s;
         }
-        .nav-btn:disabled { opacity: 0.3; }
+        .book-btn:hover { color: #bf360c; }
+        .book-btn:disabled { color: #ccc; cursor: default; }
 
-        @keyframes flipIn { from { transform: rotateY(90deg); opacity: 0; } to { transform: rotateY(0); opacity: 1; } }
-        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+        /* --- OVERLAY --- */
+        #overlay {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        #overlay.show { opacity: 1; display: flex; }
         
-        .shake-anim { animation: shake 0.5s; }
-
-        /* Victory Screen */
-        h1 { color: var(--gold); font-size: 24px; margin-bottom: 10px; text-shadow: 4px 4px 0 #000; }
-        p { font-size: 10px; color: #ccc; margin-bottom: 30px; line-height: 1.5; }
-        .btn-main { background: var(--accent); color: white; padding: 15px 30px; border: 4px solid #fff; cursor: pointer; font-family: inherit; font-size: 12px; }
+        .victory-text { font-size: 40px; color: #ffd700; text-shadow: 0 5px 0 #b26500; margin-bottom: 20px; animation: bounce 1s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        .next-btn {
+            padding: 20px 40px;
+            background: #4caf50;
+            border: 4px solid #fff;
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 10px 0 #2e7d32;
+            transition: transform 0.1s;
+        }
+        .next-btn:active { transform: translateY(5px); box-shadow: 0 5px 0 #2e7d32; }
 
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="top-ui">
-        <div class="stat">LEVEL: <span id="level-display">1</span></div>
-        <div class="stat" id="turn-display">PLAYER TURN</div>
+<!-- Dust Particles -->
+<div class="dust" style="left:10%; top:-10%; width:4px; height:4px; animation-duration: 8s;"></div>
+<div class="dust" style="left:30%; top:-20%; width:6px; height:6px; animation-duration: 12s;"></div>
+<div class="dust" style="left:70%; top:-15%; width:3px; height:3px; animation-duration: 15s;"></div>
+<div class="dust" style="left:90%; top:-5%; width:5px; height:5px; animation-duration: 10s;"></div>
+
+<div id="desk">
+    
+    <!-- LEFT: CHESS BOARD -->
+    <div id="board-container">
+        <div id="ui-status">LEVEL <span id="level-num">1</span> &bull; <span id="turn-text">PLAYER TURN</span></div>
+        <div id="board-frame">
+            <canvas id="gameCanvas" width="512" height="512"></canvas>
+        </div>
     </div>
 
-    <div id="board-wrapper">
-        <canvas id="gameCanvas" width="256" height="256"></canvas>
-    </div>
+    <!-- RIGHT: RULEBOOK -->
+    <div id="book-container">
+        <div id="tome">
+            <div id="pages">
+                <div id="bookmark"></div>
+                
+                <div class="rule-num" id="page-num">00</div>
+                <div class="rule-title" id="page-title">Loading...</div>
+                <div class="rule-text" id="page-desc">
+                    Waiting for game start...
+                </div>
+                <div class="rule-fluff" id="page-fluff"></div>
 
-    <div id="bottom-ui">
-        <button id="book-btn" onclick="openBook()">📖 Open Rulebook</button>
-    </div>
-
-    <!-- RULEBOOK -->
-    <div id="rulebook-overlay" class="overlay hidden">
-        <div id="book-spine">
-            <div id="page-content" class="page">
-                <!-- Injected via JS -->
-            </div>
-            <div class="nav-btns">
-                <button class="nav-btn" id="prev-page" onclick="changePage(-1)">Prev</button>
-                <span style="font-size:10px; padding-top:2px;" id="page-num">1/1</span>
-                <button class="nav-btn" id="next-page" onclick="changePage(1)">Next</button>
+                <div class="nav-controls">
+                    <button class="book-btn" id="btn-prev" onclick="prevPage()">&lt; PREV</button>
+                    <span id="page-count" style="font-size:10px; color:#aaa; align-self:center;">1/1</span>
+                    <button class="book-btn" id="btn-next" onclick="nextPage()">NEXT &gt;</button>
+                </div>
             </div>
         </div>
-        <button class="btn-main" style="margin-top:20px; background:#e64d4d;" onclick="closeBook()">CLOSE BOOK</button>
     </div>
 
-    <!-- VICTORY / DEFEAT -->
-    <div id="end-screen" class="overlay hidden">
-        <h1 id="end-title">VICTORY!</h1>
-        <p id="end-msg">You defeated the bot.</p>
-        <div id="unlock-msg" style="color:#ffd700; margin-bottom:20px; font-size:10px;">NEW RULE UNLOCKED!</div>
-        <button class="btn-main" onclick="nextLevel()">NEXT BATTLE</button>
+</div>
+
+<div id="overlay">
+    <div class="victory-text" id="overlay-title">VICTORY</div>
+    <div style="color:#fff; margin-bottom:40px; font-family:'Crimson Text', serif; font-size:24px; font-style:italic;" id="overlay-sub">
+        A new rule has been inscribed.
     </div>
+    <button class="next-btn" onclick="nextLevel()">CONTINUE JOURNEY</button>
 </div>
 
 <script>
-    // --- AUDIO SYSTEM (Synthesizer) ---
-    const AudioSys = {
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // --- AUDIO SYSTEM (Procedural) ---
+    const Sfx = {
         ctx: null,
-        init: function() {
+        init() {
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
             this.ctx = new AudioContext();
         },
-        playTone: function(freq, type, dur, vol=0.1) {
+        play(freq, type, dur, vol=0.1, slide=0) {
             if(!this.ctx) return;
-            const osc = this.ctx.createOscillator();
+            const o = this.ctx.createOscillator();
             const g = this.ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            o.type = type;
+            o.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            if(slide !== 0) o.frequency.linearRampToValueAtTime(freq+slide, this.ctx.currentTime+dur);
             g.gain.setValueAtTime(vol, this.ctx.currentTime);
             g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+dur);
-            osc.connect(g); g.connect(this.ctx.destination);
-            osc.start(); osc.stop(this.ctx.currentTime+dur);
+            o.connect(g); g.connect(this.ctx.destination);
+            o.start(); o.stop(this.ctx.currentTime+dur);
         },
-        sfx: {
-            move: () => AudioSys.playTone(300, 'triangle', 0.1),
-            capture: () => { AudioSys.playTone(150, 'sawtooth', 0.1); AudioSys.playTone(100, 'square', 0.2); },
-            win: () => { 
-                [400, 500, 600, 800].forEach((f,i) => setTimeout(() => AudioSys.playTone(f, 'square', 0.2), i*100)); 
-            },
-            page: () => AudioSys.playTone(800, 'sine', 0.05, 0.05),
-            boom: () => AudioSys.playTone(50, 'sawtooth', 0.3, 0.3)
+        move() { this.play(200, 'triangle', 0.1, 0.05, -50); }, // Thump
+        page() { this.play(800, 'sine', 0.15, 0.02, 200); }, // Slide
+        capture() { 
+            this.play(100, 'sawtooth', 0.1, 0.2); 
+            setTimeout(()=>this.play(50, 'square', 0.2, 0.2, -20), 50); 
+        },
+        win() {
+            [523, 659, 783, 1046].forEach((f,i) => setTimeout(() => this.play(f, 'square', 0.4, 0.1), i*150));
         }
     };
 
-    // --- GAME ENGINE ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const TILE_SIZE = 32;
-
-    // Palette
+    // --- GAME CONFIG ---
+    const TILE = 64; // 512 / 8
     const COLORS = {
-        light: '#7acc7a', dark: '#5cb85c', // Grass
-        blue: '#4da6ff', red: '#e64d4d',   // Teams
-        gold: '#ffd700', mine: '#222'
+        light: '#a8d5ba', // Soft Sage
+        dark: '#7fb093',  // Darker Sage
+        blue: '#64b5f6',  // Hero Blue
+        red: '#e57373',   // Villain Red
+        gold: '#ffd54f',
+        white: '#ffffff',
+        highlight: 'rgba(255, 255, 255, 0.4)',
+        moveHint: 'rgba(255, 213, 79, 0.5)'
     };
 
-    // State
-    let board = [];
-    let mines = [];
-    let turn = 'blue';
-    let selected = null;
-    let validMoves = [];
-    let level = 1;
-    let activeRules = [];
-    let particles = [];
-    let screenShake = 0;
-    
-    // --- RULE DATABASE ---
-    const RULE_DB = [
-        { id: 'pawn_cardinal', num: '04', name: 'Anxious Infantry', desc: 'Pawns can move 1 step in ANY cardinal direction (North, South, East, West).', fluff: '"They are small minded." - King' },
-        { id: 'mines', num: '22', name: 'Holy Waste', desc: 'Bishops leave hidden MINES on the tiles they move from. Stepping on one destroys the unit.', fluff: '"Knowledge is explosive."' },
-        { id: 'traitor', num: '02', name: 'The Affair', desc: 'You can select and move the Opponent\'s Queen as if she were your own.', fluff: '"Scandalous!"' },
-        { id: 'cannibal', num: '14', name: 'Lunch Break', desc: 'Rooks can capture friendly pieces. Moving a Rook off the board edge removes it from play.', fluff: '"Working out of town."' },
-        { id: 'heir', num: '10', name: 'The Cycle', desc: 'If a King dies, the game does NOT end. Instead, a random friendly piece is immediately promoted to King.', fluff: '"Heavy is the head."' },
-        { id: 'ascension', num: '20', name: 'Ascension', desc: 'Pawns that reach the final rank do not promote. They ascend to a higher plane (disappear).', fluff: '"My people need me."' },
-        { id: 'mirror', num: '21', name: 'Mirror World', desc: 'When a Queen captures a piece, the board state is reversed (flipped vertically).', fluff: '"Reflections lie."' },
-        { id: 'jumper', num: '09', name: 'Super Jumpers', desc: 'Knights jump 4 spaces in an L shape instead of the usual 3.', fluff: '"Leg day."' }
-    ];
-
-    // --- SPRITE GEN ---
+    // --- SPRITE GENERATOR (FIXED: NO BLACK BOXES) ---
     const SPRITES = {};
-    function initSprites() {
+    
+    function generateSprites() {
         ['blue', 'red'].forEach(team => {
             SPRITES[team] = {};
             ['pawn','rook','knight','bishop','queen','king'].forEach(type => {
-                const c = document.createElement('canvas'); c.width=32; c.height=32;
+                const c = document.createElement('canvas'); c.width=64; c.height=64;
                 const x = c.getContext('2d');
-                const col = team==='blue' ? COLORS.blue : COLORS.red;
+                const main = team === 'blue' ? COLORS.blue : COLORS.red;
+                const trim = team === 'blue' ? '#1565c0' : '#c62828';
                 
-                // Draw Shadow
-                x.fillStyle = 'rgba(0,0,0,0.3)'; x.fillRect(8, 24, 16, 4);
+                // Helper: Pixel Rect (No outline rect anymore)
+                const r = (px, py, w, h, col) => {
+                    x.fillStyle = col; 
+                    x.fillRect(px*2, py*2, w*2, h*2); // Scale 32grid to 64px
+                };
 
-                x.fillStyle = col;
-                if(type==='pawn') { x.fillRect(10,12,12,12); x.fillStyle='#fff'; x.fillRect(12,14,8,4); } // Soldier
-                if(type==='rook') { x.fillRect(8,8,16,20); x.fillStyle='#333'; x.fillRect(10,12,4,4); x.fillRect(18,12,4,4); } // Tower
-                if(type==='knight'){ x.fillRect(8,10,12,8); x.fillRect(12,18,8,10); x.fillStyle='#fff'; x.fillRect(10,12,2,2); } // Horse
-                if(type==='bishop'){ x.fillRect(12,6,8,10); x.fillRect(10,16,12,10); x.fillStyle='#ffd700'; x.fillRect(22,10,2,16); } // Wizard
-                if(type==='queen') { x.fillRect(10,8,12,6); x.fillRect(8,14,16,14); x.fillStyle='#ffd700'; x.fillRect(10,6,12,4); } // Crown
-                if(type==='king')  { x.fillRect(8,12,16,16); x.fillStyle='#ffd700'; x.fillRect(8,4,16,8); x.fillStyle='#fff'; x.fillRect(12,20,8,6); } // Beard
-                
-                // Outline
-                x.strokeStyle = '#000'; x.lineWidth = 2; x.strokeRect(8,8,16,20); // Simple box outline for style
+                // Shadow (Semi-transparent black is fine, but not a bounding box)
+                r(6, 26, 20, 4, 'rgba(0,0,0,0.3)');
+
+                if(type === 'pawn') {
+                    r(10, 12, 12, 12, main); // Head
+                    r(12, 14, 8, 4, '#fff'); // Face
+                    r(14, 8, 4, 4, COLORS.gold); // Plume
+                    r(8, 24, 16, 4, '#546e7a'); // Body Base
+                }
+                if(type === 'rook') {
+                    r(8, 8, 16, 20, '#78909c'); // Stone
+                    r(6, 6, 4, 6, main); // Battlement L
+                    r(22, 6, 4, 6, main); // Battlement R
+                    r(10, 12, 4, 4, '#37474f'); // Window
+                    r(18, 12, 4, 4, '#37474f'); // Window
+                }
+                if(type === 'knight') {
+                    r(8, 8, 12, 10, main); // Head
+                    r(10, 10, 2, 2, '#fff'); // Eye
+                    r(12, 6, 4, 4, '#fff'); // Ear
+                    r(14, 18, 8, 8, main); // Neck
+                    r(8, 26, 16, 4, '#546e7a'); // Base
+                    r(6, 12, 4, 6, trim); // Mane
+                }
+                if(type === 'bishop') {
+                    r(12, 4, 8, 10, main); // Hat
+                    r(10, 14, 12, 12, '#546e7a'); // Robe
+                    r(14, 16, 4, 4, '#fff'); // Beard
+                    r(22, 6, 2, 22, COLORS.gold); // Staff
+                    r(21, 4, 4, 4, '#a7ffeb'); // Orb
+                }
+                if(type === 'queen') {
+                    r(10, 6, 12, 6, COLORS.gold); // Crown
+                    r(14, 4, 4, 4, '#e91e63'); // Gem
+                    r(8, 12, 16, 16, main); // Dress
+                    r(12, 14, 8, 6, '#ffccbc'); // Face
+                }
+                if(type === 'king') {
+                    r(8, 4, 16, 8, COLORS.gold); // Crown
+                    r(8, 12, 16, 16, main); // Robe
+                    r(12, 14, 8, 6, '#ffccbc'); // Face
+                    r(12, 20, 8, 6, '#fff'); // Beard
+                }
+
+                // REMOVED: strokeRect which caused black boxes.
+                // Replaced with internal pixel logic only.
+
                 SPRITES[team][type] = c;
             });
         });
-        // Mine Sprite
-        const m = document.createElement('canvas'); m.width=32; m.height=32;
-        const x = m.getContext('2d');
-        x.fillStyle='#222'; x.fillRect(10,14,12,8);
-        x.fillStyle='#f00'; x.fillRect(14,12,4,4);
+        
+        // Mine
+        const m = document.createElement('canvas'); m.width=64; m.height=64;
+        const mx = m.getContext('2d');
+        mx.fillStyle='#37474f'; mx.fillRect(16,24,32,16); // Body
+        mx.fillStyle='#d32f2f'; mx.fillRect(28,20,8,8); // Button
         SPRITES['mine'] = m;
     }
 
-    // --- LOGIC ---
+    // --- GAME ENGINE ---
+    let board = [];
+    let turn = 'blue';
+    let selected = null;
+    let validMoves = [];
+    let mines = [];
+    let particles = [];
+    let level = 1;
+    let activeRules = [];
+    let bookPage = 0;
+    let animTime = 0; // For bobbing animation
+
+    // --- RULES DATABASE ---
+    const RULES = [
+        // Rule 00 is always unlocked
+        { id: 'standard', num: '00', name: 'STANDARD WARFARE', desc: 'Standard Chess rules apply. Defeat the enemy bot to unlock new pages.', fluff: '"The calm before the storm."' },
+        { id: 'pawn_cardinal', num: '01', name: 'ANXIOUS INFANTRY', desc: 'Pawns can move 1 step in ANY cardinal direction (North, South, East, West).', fluff: '"They are small minded." - King' },
+        { id: 'mines', num: '02', name: 'HOLY WASTE', desc: 'Bishops leave hidden MINES on the tiles they move from. Stepping on one destroys the unit.', fluff: '"Knowledge is explosive."' },
+        { id: 'traitor', num: '03', name: 'THE AFFAIR', desc: 'You can select and move the Opponent\'s Queen as if she were your own.', fluff: '"Scandalous!"' },
+        { id: 'cannibal', num: '04', name: 'LUNCH BREAK', desc: 'Rooks can capture friendly pieces. Moving a Rook off the board edge removes it from play.', fluff: '"Working out of town."' },
+        { id: 'heir', num: '05', name: 'THE CYCLE', desc: 'If a King dies, the game does NOT end. Instead, a random friendly piece is immediately promoted to King.', fluff: '"Heavy is the head."' },
+        { id: 'ascension', num: '06', name: 'ASCENSION', desc: 'Pawns that reach the final rank do not promote. They ascend to a higher plane (disappear).', fluff: '"My people need me."' },
+        { id: 'mirror', num: '07', name: 'MIRROR WORLD', desc: 'When a Queen captures a piece, the board state is reversed (flipped vertically).', fluff: '"Reflections lie."' },
+        { id: 'jumper', num: '08', name: 'SUPER JUMPERS', desc: 'Knights jump 4 spaces in an L shape instead of the usual 3.', fluff: '"Leg day."' }
+    ];
+
     function initLevel() {
-        mines = [];
         board = Array(8).fill(null).map(() => Array(8).fill(null));
         const row = ['rook','knight','bishop','queen','king','bishop','knight','rook'];
         for(let x=0; x<8; x++) {
-            board[1][x] = {type:'pawn', team:'red'};
-            board[6][x] = {type:'pawn', team:'blue'};
-            board[0][x] = {type:row[x], team:'red'};
-            board[7][x] = {type:row[x], team:'blue'};
+            board[1][x] = {type:'pawn', team:'red', id:Math.random()};
+            board[6][x] = {type:'pawn', team:'blue', id:Math.random()};
+            board[0][x] = {type:row[x], team:'red', id:Math.random()};
+            board[7][x] = {type:row[x], team:'blue', id:Math.random()};
         }
+        mines = [];
         turn = 'blue';
-        document.getElementById('turn-display').innerText = "PLAYER TURN";
-        document.getElementById('level-display').innerText = level;
+        
+        // Ensure standard rule is always there
+        if(activeRules.length === 0) activeRules.push('standard');
+        
+        updateUI();
     }
 
+    // --- LOGIC --- (Simplified for Deluxe Version)
     function getMoves(p, cx, cy) {
         let moves = [];
         let dir = p.team === 'blue' ? -1 : 1;
         
-        // RULE: Traitor Queen
-        if(p.type === 'queen' && p.team !== turn && activeRules.includes('traitor')) {
-            // Allow
-        } else if (p.team !== turn) return [];
+        if(p.type === 'queen' && p.team !== turn && activeRules.includes('traitor')) {} // Allow
+        else if(p.team !== turn) return [];
 
-        // Pawn
+        const chk = (x,y) => x>=0&&x<8&&y>=0&&y<8 && board[y][x]===null;
+        const enemy = (x,y) => x>=0&&x<8&&y>=0&&y<8 && board[y][x] && board[y][x].team !== p.team;
+
+        // Pawns
         if(p.type === 'pawn') {
             if(chk(cx, cy+dir)) moves.push({x:cx, y:cy+dir});
-            if((p.team==='blue'&&cy===6)||(p.team==='red'&&cy===1)) {
-                if(chk(cx, cy+dir) && chk(cx, cy+dir*2)) moves.push({x:cx, y:cy+dir*2});
-            }
-            if(enemy(cx+1, cy+dir, p.team)) moves.push({x:cx+1, y:cy+dir});
-            if(enemy(cx-1, cy+dir, p.team)) moves.push({x:cx-1, y:cy+dir});
-            
-            // RULE: Cardinal Pawns
-            if(activeRules.includes('pawn_cardinal')) {
-                [[0,1],[0,-1],[1,0],[-1,0]].forEach(d=>{
-                    if(chk(cx+d[0], cy+d[1])) moves.push({x:cx+d[0], y:cy+d[1]});
-                });
-            }
+            if((p.team==='blue'&&cy===6)||(p.team==='red'&&cy===1)) if(chk(cx, cy+dir)&&chk(cx, cy+dir*2)) moves.push({x:cx, y:cy+dir*2});
+            if(enemy(cx+1, cy+dir)) moves.push({x:cx+1, y:cy+dir});
+            if(enemy(cx-1, cy+dir)) moves.push({x:cx-1, y:cy+dir});
+            if(activeRules.includes('pawn_cardinal')) [[0,1],[0,-1],[1,0],[-1,0]].forEach(d=>{ if(chk(cx+d[0], cy+d[1])) moves.push({x:cx+d[0], y:cy+d[1]}); });
         }
-
-        // Knight
+        // Knights
         if(p.type === 'knight') {
             let j = [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]];
             if(activeRules.includes('jumper')) j = [[3,1],[3,-1],[-3,1],[-3,-1],[1,3],[1,-3],[-1,3],[-1,-3]];
-            j.forEach(d=>{
-                let tx=cx+d[0], ty=cy+d[1];
-                if(on(tx,ty) && (chk(tx,ty) || enemy(tx,ty,p.team))) moves.push({x:tx, y:ty});
-            });
+            j.forEach(d=>{ let tx=cx+d[0], ty=cy+d[1]; if(tx>=0&&tx<8&&ty>=0&&ty<8 && (board[ty][tx]===null || board[ty][tx].team!==p.team)) moves.push({x:tx, y:ty}); });
         }
-
-        // Sliders
-        if(p.type==='rook'||p.type==='queen') slide(moves, cx, cy, [[0,1],[0,-1],[1,0],[-1,0]], p);
-        if(p.type==='bishop'||p.type==='queen') slide(moves, cx, cy, [[1,1],[1,-1],[-1,1],[-1,-1]], p);
-
-        // King
-        if(p.type==='king') {
-            [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]].forEach(d=>{
-                let tx=cx+d[0], ty=cy+d[1];
-                // Rule 18: Fair Lady (Queen cannot kill King) -> Technically handled by capture logic but simplified here
-                if(on(tx,ty) && (chk(tx,ty) || enemy(tx,ty,p.team))) moves.push({x:tx, y:ty});
+        // Sliders & King
+        const slide = (dirs, dist) => {
+            dirs.forEach(d=>{
+                for(let i=1; i<=dist; i++) {
+                    let tx=cx+d[0]*i, ty=cy+d[1]*i;
+                    if(tx<0||tx>=8||ty<0||ty>=8) break;
+                    if(board[ty][tx] === null) moves.push({x:tx, y:ty});
+                    else {
+                        if(board[ty][tx].team !== p.team || (activeRules.includes('cannibal') && p.type === 'rook')) moves.push({x:tx, y:ty});
+                        break;
+                    }
+                }
             });
-        }
+        };
+        if(p.type==='rook'||p.type==='queen') slide([[0,1],[0,-1],[1,0],[-1,0]], 8);
+        if(p.type==='bishop'||p.type==='queen') slide([[1,1],[1,-1],[-1,1],[-1,-1]], 8);
+        if(p.type==='king') slide([[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]], 1);
+
         return moves;
     }
 
-    function slide(moves, x, y, dirs, p) {
-        dirs.forEach(d=>{
-            for(let i=1; i<8; i++) {
-                let tx=x+d[0]*i, ty=y+d[1]*i;
-                if(!on(tx,ty)) {
-                    // Rule: Towers (Leave Board)
-                    if(activeRules.includes('cannibal') && p.type === 'rook' && i===1) { 
-                        // Only allow exiting if immediately at edge for simplicity, or just mark edge as move?
-                        // Let's implement: If target is OFF BOARD, and rule active, push specific code?
-                        // Simplified: If move hits edge, next step is OFF.
-                    }
-                    break; 
-                }
-                
-                if(chk(tx,ty)) moves.push({x:tx, y:ty});
-                else {
-                    let t = board[ty][tx];
-                    let canEat = activeRules.includes('cannibal') && p.type === 'rook';
-                    // Rule 18: Fair Lady
-                    if(p.type === 'queen' && t.type === 'king' && t.team !== p.team && activeRules.includes('fair_lady')) {
-                        // Cannot capture
-                        break; 
-                    }
-                    if(t.team !== p.team || canEat) moves.push({x:tx, y:ty});
-                    break;
-                }
-            }
-        });
-    }
-
-    const on = (x,y) => x>=0 && x<8 && y>=0 && y<8;
-    const chk = (x,y) => on(x,y) && board[y][x] === null;
-    const enemy = (x,y,t) => on(x,y) && board[y][x] && board[y][x].team !== t;
-
     function move(sx, sy, tx, ty) {
         let p = board[sy][sx];
-        let t = board[ty][tx]; // Target (Capture)
+        let t = board[ty][tx];
 
-        // Rule: Mines spawn
         if(activeRules.includes('mines') && p.type === 'bishop') mines.push({x:sx, y:sy});
 
-        // Effect
-        shake(3);
-        AudioSys.sfx.move();
         if(t) {
-            AudioSys.sfx.capture();
-            spawnParticles(tx, ty, '#fff', 10);
-            
-            // Rule: Mirroring
-            if(activeRules.includes('mirror') && p.type === 'queen') {
-                board.reverse(); // Flip rows
-                // Flip mines too? Simplified: Just board
-                shake(10);
-                setTimeout(() => alert("MIRROR WORLD ACTIVATED!"), 100);
-            }
-        }
+            Sfx.capture();
+            spawnParticles(tx, ty, '#fff', 15);
+            if(activeRules.includes('mirror') && p.type === 'queen') { board.reverse(); Sfx.page(); }
+        } else Sfx.move();
 
         board[ty][tx] = p;
         board[sy][sx] = null;
 
-        // Rule: Mine Explode
-        let midx = mines.findIndex(m=>m.x===tx && m.y===ty);
-        if(midx !== -1) {
-            AudioSys.sfx.boom();
-            spawnParticles(tx, ty, '#f00', 20);
+        // Mine Check
+        let mIdx = mines.findIndex(m=>m.x===tx && m.y===ty);
+        if(mIdx !== -1) {
+            Sfx.capture();
+            spawnParticles(tx, ty, '#d32f2f', 20);
             board[ty][tx] = null;
-            mines.splice(midx, 1);
-            p = null; // Piece dead
+            mines.splice(mIdx, 1);
+            p = null; // Piece died
         }
 
-        // Rule: Ascension
-        if(p && p.type === 'pawn' && activeRules.includes('ascension') && (ty===0||ty===7)) {
-            board[ty][tx] = null;
-            spawnParticles(tx, ty, '#ff0', 10);
-        }
-
-        // Win Check / Cycle Rule
+        // Win/Cycle Check
         if(t && t.type === 'king') {
             if(activeRules.includes('heir')) {
-                // Find new heir
                 let heir = findHeir(t.team);
-                if(heir) {
-                    heir.type = 'king';
-                    spawnParticles(tx, ty, '#ff0', 20);
-                    // Game continues
-                } else {
-                    endGame(p.team);
-                    return;
-                }
-            } else {
-                endGame(p.team);
-                return;
-            }
-        } else if (!findKing('blue')) { endGame('red'); return; } // Mine death check
-          else if (!findKing('red')) { endGame('blue'); return; }
+                if(heir) { heir.type='king'; spawnParticles(tx, ty, COLORS.gold, 20); }
+                else endGame(p.team);
+            } else endGame(p.team);
+        } else if(!findKing('blue')) endGame('red');
+          else if(!findKing('red')) endGame('blue');
 
-        // Next Turn
-        turn = turn === 'blue' ? 'red' : 'blue';
-        document.getElementById('turn-display').innerText = turn === 'blue' ? "PLAYER TURN" : "BOT THINKING...";
-        
-        if(turn === 'red') setTimeout(botMove, 700);
-    }
-
-    function findHeir(team) {
-        for(let y=0; y<8; y++) for(let x=0; x<8; x++) {
-            if(board[y][x] && board[y][x].team === team && board[y][x].type !== 'pawn') return board[y][x];
+        // Next
+        if(!document.getElementById('overlay').classList.contains('show')) {
+            turn = turn === 'blue' ? 'red' : 'blue';
+            updateUI();
+            if(turn === 'red') setTimeout(botMove, 600);
         }
-        return null; // No heir found
     }
+
+    // --- HELPERS ---
+    function findHeir(team) { for(let y=0;y<8;y++) for(let x=0;x<8;x++) if(board[y][x] && board[y][x].team===team && board[y][x].type!=='pawn') return board[y][x]; return null; }
+    function findKing(team) { for(let y=0;y<8;y++) for(let x=0;x<8;x++) if(board[y][x] && board[y][x].team===team && board[y][x].type==='king') return true; return false; }
     
-    function findKing(team) {
-        for(let y=0; y<8; y++) for(let x=0; x<8; x++) {
-            if(board[y][x] && board[y][x].team === team && board[y][x].type === 'king') return true;
-        }
-        return false;
-    }
-
     function endGame(winner) {
         if(winner === 'blue') {
-            AudioSys.sfx.win();
-            document.getElementById('end-title').innerText = "VICTORY!";
-            document.getElementById('end-title').style.color = COLORS.gold;
-            document.getElementById('end-msg').innerText = "The bot was defeated.";
-            
-            // Unlock Rule
-            if(level <= RULE_DB.length) {
-                let newRule = RULE_DB[level-1];
-                document.getElementById('unlock-msg').innerText = `UNLOCKED: RULE #${newRule.num}`;
-                activeRules.push(newRule.id);
-            } else {
-                document.getElementById('unlock-msg').innerText = "MAX CHAOS REACHED";
-            }
-            document.getElementById('end-screen').classList.remove('hidden');
+            Sfx.win();
+            document.getElementById('overlay-title').innerText = "VICTORY";
+            document.getElementById('overlay-title').style.color = COLORS.gold;
+            // Unlock next rule if available
+            // Note: Rule 0 is standard, so level 1 victory unlocks rule 1
+            if(level < RULES.length) {
+                let r = RULES[level]; // e.g. level 1 unlocks RULES[1]
+                document.getElementById('overlay-sub').innerText = `UNLOCKED: ${r.name}`;
+                if(!activeRules.includes(r.id)) activeRules.push(r.id);
+            } else document.getElementById('overlay-sub').innerText = "MAX CHAOS REACHED";
+            document.getElementById('overlay').classList.add('show');
         } else {
-            document.getElementById('end-title').innerText = "DEFEAT";
-            document.getElementById('end-title').style.color = COLORS.red;
-            document.getElementById('end-msg').innerText = "Try again.";
-            document.getElementById('unlock-msg').innerText = "";
-            document.getElementById('end-screen').classList.remove('hidden');
+            document.getElementById('overlay-title').innerText = "DEFEAT";
+            document.getElementById('overlay-title').style.color = COLORS.red;
+            document.getElementById('overlay-sub').innerText = "Try again...";
+            document.getElementById('overlay').classList.add('show');
         }
     }
 
     function nextLevel() {
-        if(document.getElementById('end-title').innerText === "VICTORY!") {
+        if(document.getElementById('overlay-title').innerText === "VICTORY") {
             level++;
-            // Open book automatically to show new rule
-            currentPage = activeRules.length - 1;
-            renderBook();
-            openBook();
+            bookPage = activeRules.length - 1; // Show new rule
+            renderPage();
         }
-        document.getElementById('end-screen').classList.add('hidden');
+        document.getElementById('overlay').classList.remove('show');
         initLevel();
     }
 
-    // --- BOT ---
-    function bot() {
-        // ... (existing bot logic) ...
-    }
-    
-    function botMove() {
-        let pieces = [];
-        for(let y=0; y<8; y++) for(let x=0; x<8; x++) {
-            if(board[y][x] && board[y][x].team === 'red') pieces.push({x, y, p:board[y][x]});
-        }
-        
-        // Simple Minimax-ish (Look at capture value)
-        let bestMove = null;
-        let bestScore = -100;
-
-        pieces.sort(()=>Math.random()-0.5); // Shuffle
-
-        for(let pc of pieces) {
-            let mvs = getMoves(pc.p, pc.x, pc.y);
-            for(let m of mvs) {
-                let score = 0;
-                let target = board[m.y][m.x];
-                if(target) {
-                    if(target.type === 'king') score += 100;
-                    if(target.type === 'queen') score += 9;
-                    if(target.type === 'rook') score += 5;
-                    else score += 1;
-                }
-                // Bot gets smarter with level (scans for danger)
-                if(level > 2) {
-                    // Avoid mines
-                    if(mines.some(mn=>mn.x===m.x && mn.y===m.y)) score -= 50;
-                }
-
-                if(score > bestScore) {
-                    bestScore = score;
-                    bestMove = { sx: pc.x, sy: pc.y, tx: m.x, ty: m.y };
-                }
-            }
-        }
-
-        if(bestMove) move(bestMove.sx, bestMove.sy, bestMove.tx, bestMove.ty);
-        else {
-             // Checkmate? or Stuck. Pass turn.
-             turn = 'blue';
-             document.getElementById('turn-display').innerText = "PLAYER TURN";
-        }
-    }
-
     // --- VISUALS ---
-    function shake(amount) {
-        screenShake = amount;
-        if(amount > 0) document.getElementById('game-container').classList.add('shake-anim');
-        setTimeout(()=>document.getElementById('game-container').classList.remove('shake-anim'), 500);
-    }
-
     function spawnParticles(gx, gy, col, count) {
         for(let i=0; i<count; i++) {
             particles.push({
-                x: gx*TILE_SIZE+16, y: gy*TILE_SIZE+16,
-                vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4,
-                life: 20, col: col
+                x: gx*TILE+32, y: gy*TILE+32,
+                vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8,
+                life: 30, col: col, size: Math.random()*4+2
             });
         }
     }
 
     function draw() {
-        ctx.fillStyle = '#1a1a2e'; ctx.fillRect(0,0,256,256);
-        
-        // Draw Board
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,512,512);
+        animTime += 0.05;
+
+        // Draw Tiles
         for(let y=0; y<8; y++) {
             for(let x=0; x<8; x++) {
-                const isDark = (x+y)%2===1;
-                ctx.fillStyle = isDark ? COLORS.dark : COLORS.light;
+                ctx.fillStyle = (x+y)%2===1 ? COLORS.dark : COLORS.light;
                 
-                if(selected && selected.x===x && selected.y===y) ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                else if(validMoves.some(m=>m.x===x && m.y===y)) ctx.fillStyle = 'rgba(255,215,0,0.5)';
-                
-                ctx.fillRect(x*TILE_SIZE, y*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                // Highlights
+                if(selected && selected.x===x && selected.y===y) ctx.fillStyle = COLORS.highlight;
+                if(validMoves.some(m=>m.x===x && m.y===y)) ctx.fillStyle = COLORS.moveHint;
+
+                ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
 
                 // Mines
-                if(mines.some(m=>m.x===x && m.y===y)) ctx.drawImage(SPRITES['mine'], x*TILE_SIZE, y*TILE_SIZE);
+                if(mines.some(m=>m.x===x && m.y===y)) ctx.drawImage(SPRITES['mine'], x*TILE, y*TILE);
 
+                // Pieces
                 let p = board[y][x];
-                if(p) ctx.drawImage(SPRITES[p.team][p.type], x*TILE_SIZE, y*TILE_SIZE);
-                
-                // Move Dots
+                if(p) {
+                    // Bobbing animation based on ID so they aren't synced
+                    let bob = Math.sin(animTime + p.id*10) * 2;
+                    ctx.drawImage(SPRITES[p.team][p.type], x*TILE, y*TILE + bob);
+                }
+
+                // Move Dot
                 if(validMoves.some(m=>m.x===x && m.y===y)) {
-                    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(x*TILE_SIZE+14, y*TILE_SIZE+14, 4, 4);
+                    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                    ctx.beginPath(); ctx.arc(x*TILE+32, y*TILE+32, 6, 0, Math.PI*2); ctx.fill();
                 }
             }
         }
@@ -619,78 +630,30 @@
         // Particles
         for(let i=particles.length-1; i>=0; i--) {
             let p = particles[i];
-            p.x += p.vx; p.y += p.vy; p.life--;
-            ctx.fillStyle = p.col; ctx.fillRect(p.x, p.y, 2, 2);
+            p.x += p.vx; p.y += p.vy; p.life--; p.vy += 0.2; // Gravity
+            ctx.fillStyle = p.col; ctx.fillRect(p.x, p.y, p.size, p.size);
             if(p.life <= 0) particles.splice(i, 1);
         }
 
         requestAnimationFrame(draw);
     }
 
-    // --- BOOK UI ---
-    let currentPage = 0;
-    
-    function openBook() {
-        AudioSys.sfx.page();
-        document.getElementById('rulebook-overlay').classList.remove('hidden');
-        renderBook();
-    }
-    
-    function closeBook() { document.getElementById('rulebook-overlay').classList.add('hidden'); }
-    
-    function changePage(dir) {
-        AudioSys.sfx.page();
-        currentPage += dir;
-        renderBook();
-    }
-
-    function renderBook() {
-        const content = document.getElementById('page-content');
-        if(activeRules.length === 0) {
-            content.innerHTML = `<div style="margin-top:50px; text-align:center;">The book is empty.<br><br>Defeat the bot to write history.</div>`;
-            document.getElementById('prev-page').disabled = true;
-            document.getElementById('next-page').disabled = true;
-            document.getElementById('page-num').innerText = "0/0";
-            return;
-        }
-
-        if(currentPage < 0) currentPage = 0;
-        if(currentPage >= activeRules.length) currentPage = activeRules.length - 1;
-
-        let ruleId = activeRules[currentPage];
-        let rule = RULE_DB.find(r => r.id === ruleId);
-
-        content.innerHTML = `
-            <div class="rule-number">#${rule.num}</div>
-            <div class="rule-title">${rule.name}</div>
-            <div class="rule-desc">${rule.desc}</div>
-            <div class="flavor-text">${rule.fluff}</div>
-            <div style="margin-top:20px; text-align:center;">
-                 <div style="font-size:30px;">♟️</div>
-            </div>
-        `;
-
-        document.getElementById('prev-page').disabled = currentPage === 0;
-        document.getElementById('next-page').disabled = currentPage === activeRules.length - 1;
-        document.getElementById('page-num').innerText = `${currentPage + 1}/${activeRules.length}`;
-    }
-
     // --- INPUT ---
-    canvas.addEventListener('pointerdown', e => {
+    canvas.addEventListener('mousedown', e => {
         if(turn !== 'blue') return;
-        AudioSys.init(); // Unlock Audio
+        Sfx.init();
         const rect = canvas.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left) / (rect.width/8));
-        const y = Math.floor((e.clientY - rect.top) / (rect.height/8));
-        
+        const x = Math.floor(((e.clientX - rect.left) / rect.width) * 8);
+        const y = Math.floor(((e.clientY - rect.top) / rect.height) * 8);
+
         if(selected) {
-            let mv = validMoves.find(m=>m.x===x && m.y===y);
-            if(mv) {
+            let m = validMoves.find(mv=>mv.x===x && mv.y===y);
+            if(m) {
                 move(selected.x, selected.y, x, y);
                 selected = null; validMoves = [];
             } else {
                 selected = null; validMoves = [];
-                // Reselect
+                // Reselect logic
                 if(board[y][x] && (board[y][x].team==='blue' || (activeRules.includes('traitor') && board[y][x].type==='queen'))) {
                     selected = {x,y}; validMoves = getMoves(board[y][x], x, y);
                 }
@@ -702,12 +665,56 @@
         }
     });
 
-    initSprites();
+    // --- UI HELPERS ---
+    function updateUI() {
+        document.getElementById('level-num').innerText = level;
+        document.getElementById('turn-text').innerText = turn === 'blue' ? "PLAYER TURN" : "BOT THINKING...";
+        document.getElementById('turn-text').style.color = turn === 'blue' ? COLORS.blue : COLORS.red;
+    }
+
+    function renderPage() {
+        const num = document.getElementById('page-num');
+        const title = document.getElementById('page-title');
+        const desc = document.getElementById('page-desc');
+        const fluff = document.getElementById('page-fluff');
+
+        if(bookPage < 0) bookPage = 0;
+        if(bookPage >= activeRules.length) bookPage = activeRules.length - 1;
+
+        let r = RULES.find(rule => rule.id === activeRules[bookPage]);
+        num.innerText = r.num; title.innerText = r.name;
+        desc.innerText = r.desc; fluff.innerText = r.fluff;
+        
+        document.getElementById('page-count').innerText = `${bookPage+1}/${activeRules.length}`;
+        document.getElementById('btn-prev').disabled = bookPage === 0;
+        document.getElementById('btn-next').disabled = bookPage === activeRules.length - 1;
+    }
+
+    function prevPage() { if(bookPage > 0) { bookPage--; Sfx.page(); renderPage(); } }
+    function nextPage() { if(bookPage < activeRules.length-1) { bookPage++; Sfx.page(); renderPage(); } }
+
+    function botMove() {
+        // Simple Random Bot
+        let pieces = [];
+        for(let y=0; y<8; y++) for(let x=0; x<8; x++) if(board[y][x] && board[y][x].team === 'red') pieces.push({x,y,p:board[y][x]});
+        pieces.sort(()=>Math.random()-0.5);
+        for(let pc of pieces) {
+            let mvs = getMoves(pc.p, pc.x, pc.y);
+            if(mvs.length > 0) {
+                let m = mvs[Math.floor(Math.random()*mvs.length)];
+                move(pc.x, pc.y, m.x, m.y);
+                return;
+            }
+        }
+        turn = 'blue'; updateUI(); // Stuck
+    }
+
+    // Init
+    generateSprites();
     initLevel();
+    renderPage();
     draw();
 
 </script>
 </body>
 </html>
-
-
