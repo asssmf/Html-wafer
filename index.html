@@ -13,645 +13,543 @@
             --wood-light: #5d4037;
             --accent: #ffb74d;
             --text-main: #eceff1;
+            --tile-light: #a8d5ba;
+            --tile-dark: #7fb093;
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
 
         body {
             background-color: var(--bg-color);
             background-image: radial-gradient(circle at center, #1c1c24 0%, #000000 100%);
-            margin: 0;
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            margin: 0; padding: 0;
+            height: 100vh; width: 100vw;
+            display: flex; align-items: center; justify-content: center;
             font-family: 'Press Start 2P', cursive;
             color: var(--text-main);
             overflow: hidden;
-            user-select: none;
             touch-action: none;
         }
 
-        /* --- LAYOUT --- */
+        /* --- STAGE --- */
+        #game-scaler {
+            width: 1100px; height: 650px;
+            display: flex; align-items: center; justify-content: center;
+            transform-origin: center center;
+        }
+
         #desk {
-            display: flex;
-            gap: 60px;
-            align-items: center;
-            justify-content: center;
+            display: flex; flex-direction: row; align-items: center; justify-content: center;
+            gap: 100px; width: 100%; height: 100%;
             perspective: 1200px;
-            transform-style: preserve-3d;
-            width: 1100px; 
-            height: 700px;
-            will-change: transform; 
         }
 
-        /* --- LEFT: CHESS BOARD --- */
-        #board-container {
+        /* --- BOARD --- */
+        #board-wrapper {
             position: relative;
-            transform: rotateX(20deg); 
-            width: 540px; 
-            height: 540px;
+            width: 536px; height: 536px;
+            transform-style: preserve-3d;
+            transform: rotateX(25deg); 
             flex-shrink: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transform-style: preserve-3d;
-        }
-        
-        #board-frame {
-            box-shadow: 
-                0 10px 0 #281a16, 0 20px 0 #1a110e,
-                0 50px 80px rgba(0,0,0,0.8);
+            box-shadow: 0 50px 80px rgba(0,0,0,0.6);
+            border-radius: 6px;
             background: #3e2723;
-            /* CRITICAL: Padding creates the wood border, inner-content is the play area */
-            padding: 14px; 
-            border-radius: 8px;
-            border: 1px solid #5d4037;
-            position: relative;
-            transform-style: preserve-3d;
         }
 
-        /* The Container for Canvas AND Clicks - MUST BE SAME SIZE */
-        #play-area {
-            width: 512px;
-            height: 512px;
-            position: relative;
-            transform-style: preserve-3d;
+        /* Frame */
+        #board-frame {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border: 12px solid #5d4037;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background: #222;
+            display: flex; justify-content: center; align-items: center;
         }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            image-rendering: pixelated; 
-            background: #2d2d2d; 
-            transform: translateZ(1px); /* Just above background */
-            border: 2px solid #281a16;
-            pointer-events: none; /* Pass clicks to grid */
-        }
-
-        /* --- INTERACTION GRID --- */
-        #click-layer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+        /* The Grid */
+        #board-grid {
             display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(8, 1fr);
-            transform: translateZ(15px); /* Lifted well above canvas to catch clicks */
-            z-index: 100;
+            grid-template-columns: repeat(8, 64px);
+            grid-template-rows: repeat(8, 64px);
+            border: 4px solid #281a16;
+            background: #000;
         }
 
-        .click-tile {
-            width: 100%; height: 100%;
+        /* TILE - The Physical Button */
+        .tile {
+            width: 64px; height: 64px;
+            position: relative;
             cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.02); /* Faint guide */
+            z-index: 10; /* Base Layer */
+        }
+
+        .tile.light { background-color: var(--tile-light); }
+        .tile.dark { background-color: var(--tile-dark); }
+
+        /* Interaction Visuals */
+        .tile:hover { z-index: 20; box-shadow: inset 0 0 0 2px #fff; }
+        .tile:active { filter: brightness(0.8); }
+
+        /* Selected (Yellow Glow) */
+        .tile.selected { 
+            background-color: rgba(255, 213, 79, 0.8) !important; 
+            box-shadow: inset 0 0 15px #bfa13a;
+        }
+
+        /* Valid Move (Green Dot) */
+        .tile.valid::after {
+            content: ''; position: absolute;
+            top: 50%; left: 50%; width: 16px; height: 16px;
+            background: #4caf50; border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 6px #fff; pointer-events: none;
+        }
+
+        /* Capture (Red Box) - INSET SHADOW FIXED */
+        .tile.capture {
+            box-shadow: inset 0 0 0 5px #e57373 !important;
+        }
+
+        /* Piece Image - Sits Inside Tile, IGNORES CLICKS */
+        .piece {
+            width: 100%; height: 100%;
+            background-size: 85%; background-repeat: no-repeat;
+            background-position: center bottom 4px;
+            pointer-events: none; /* CRITICAL FIX */
+            position: relative;
+            z-index: 5; /* Visual only */
+            transition: transform 0.2s;
         }
         
-        /* HOVER FEEDBACK - Essential for 3D */
-        .click-tile:hover {
-            background: rgba(255, 255, 255, 0.2);
-            box-shadow: inset 0 0 10px rgba(255,255,255,0.2);
-        }
+        .piece.bob { animation: bob 2s infinite ease-in-out; }
+        @keyframes bob { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
 
-        /* Valid Move Indicator (Green Dot) */
-        .click-tile.valid::after {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 12px; height: 12px;
-            background: #4caf50;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 8px #4caf50;
-            pointer-events: none;
-        }
-
-        .click-tile.selected {
-            background: rgba(255, 213, 79, 0.4);
-            box-shadow: inset 0 0 15px rgba(255, 213, 79, 0.6);
-        }
-
-        /* Floating UI Text */
         #ui-status {
-            position: absolute;
-            top: -70px; left: 0; width: 100%;
-            text-align: center;
-            font-size: 14px;
-            color: #888;
-            letter-spacing: 2px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-            transform: translateZ(60px);
-            pointer-events: none;
+            position: absolute; top: -70px; width: 100%; text-align: center;
+            font-size: 14px; color: #888; text-shadow: 0 2px 4px #000;
+            transform: translateZ(20px);
         }
         #ui-status span { color: var(--accent); }
 
-        /* --- RIGHT: RULE BOOK --- */
-        #book-container {
-            width: 360px;
-            height: 520px;
+        /* --- BOOK --- */
+        #book-wrapper {
+            width: 360px; height: 520px;
             position: relative;
-            transform: rotateX(10deg) rotateY(-10deg); 
             transform-style: preserve-3d;
+            transform: rotateX(15deg) rotateY(-15deg);
+            transition: transform 0.5s;
             flex-shrink: 0;
         }
 
-        #tome {
-            width: 100%; height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-        }
-
         #book-cover {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #3e2723;
-            border-radius: 6px 16px 16px 6px;
-            border: 3px solid #281a16;
-            transform-origin: left;
-            transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            z-index: 50;
-            backface-visibility: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: inset 10px 0 20px rgba(0,0,0,0.5), 5px 5px 15px rgba(0,0,0,0.6);
-        }
-        
-        #book-cover:hover { transform: rotateY(-5deg); }
-
-        #book-container.open #book-cover { 
-            transform: rotateY(-180deg); 
-            pointer-events: none; 
-        }
-
-        .cover-decor {
-            border: 4px double #5d4037;
-            width: 80%; height: 90%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            background: rgba(0,0,0,0.15);
-        }
-
-        .cover-title {
-            font-family: 'Crimson Text', serif;
-            color: #ffb74d;
-            font-size: 32px;
-            text-shadow: 0 2px 2px rgba(0,0,0,0.5);
-            margin-bottom: 20px;
-        }
-
-        #pages-layer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #281a16; 
-            border-radius: 6px 16px 16px 6px;
-            z-index: 10;
-            display: flex;
-            box-shadow: 5px 5px 20px rgba(0,0,0,0.5);
-            transform: translateZ(-2px);
-        }
-
-        #pages {
-            background: #fdf6e3; 
-            margin: 6px 10px 10px 10px;
-            flex: 1;
-            box-shadow: inset 20px 0 40px rgba(0,0,0,0.1);
-            position: relative;
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            font-family: 'Crimson Text', serif;
-            color: #2c1a16;
-            overflow: hidden;
-            border-radius: 2px 10px 10px 2px;
-        }
-
-        .rule-num { 
-            font-family: 'Press Start 2P', cursive;
-            font-size: 32px; 
-            color: rgba(62, 39, 35, 0.1); 
-            position: absolute; top: 15px; right: 15px;
-        }
-        
-        .rule-title { font-size: 22px; font-weight: bold; border-bottom: 2px solid #3e2723; padding-bottom: 8px; margin-bottom: 15px; }
-        .rule-text { font-size: 18px; line-height: 1.5; height: 280px; overflow-y: auto; }
-        .rule-fluff { font-size: 14px; font-style: italic; color: #6d4c41; margin-top: auto; text-align: right; padding-bottom: 40px; }
-
-        .nav-controls { 
-            position: absolute; bottom: 15px; left: 25px; right: 25px;
-            display: flex; justify-content: space-between; 
-            border-top: 1px solid rgba(0,0,0,0.1); padding-top: 10px; 
-            z-index: 200; /* Ensure clickable */
-            transform: translateZ(50px); /* Lift off page */
-        }
-        .book-btn { 
-            background: #eee; border: 1px solid #ccc; border-radius: 4px;
-            cursor: pointer; color: #5d4037; 
-            font-family: 'Press Start 2P', cursive; font-size: 10px; padding: 12px; 
-            transition: all 0.2s; pointer-events: auto; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .book-btn:hover { background: #bf360c; color: #fff; transform: translateY(-2px); }
-        .book-btn:disabled { opacity: 0.5; cursor: default; background: transparent; transform: none; }
-
-        /* --- MENUS --- */
-        #main-menu, #settings-modal {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(18, 18, 20, 0.98);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(10px);
+            background: #3e2723; border-radius: 6px 16px 16px 6px; border: 3px solid #281a16;
+            transform-origin: left; transition: transform 0.6s ease;
+            z-index: 50; backface-visibility: hidden;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            cursor: pointer;
+            box-shadow: inset 10px 0 20px rgba(0,0,0,0.5);
+        }
+        .cover-text { font-family: 'Crimson Text'; color: #ffb74d; font-size: 32px; text-shadow: 0 2px 2px #000; text-align: center; }
+        
+        #book-wrapper.open #book-cover { transform: rotateY(-180deg); pointer-events: none; }
+
+        #book-pages {
+            position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px;
+            background: #fdf6e3; border-radius: 4px 14px 14px 4px;
+            z-index: 10; padding: 25px; display: flex; flex-direction: column;
+            box-shadow: inset 10px 0 30px rgba(0,0,0,0.1);
+        }
+
+        .rule-header { font-size: 20px; font-weight: bold; border-bottom: 2px solid #3e2723; padding-bottom: 10px; margin-bottom: 15px; color: #2c1a16; }
+        .rule-body { font-size: 16px; line-height: 1.5; color: #3e2723; font-family: 'Crimson Text', serif; flex: 1; overflow-y: auto; }
+        
+        .book-controls {
+            display: flex; justify-content: space-between;
+            margin-top: 15px; border-top: 1px solid #ccc; padding-top: 15px;
+            position: relative; z-index: 100;
+        }
+        .b-btn {
+            background: #e0e0e0; border: 1px solid #999; padding: 10px 12px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 10px;
+            color: #333; transition: 0.1s; box-shadow: 0 2px 0 #999;
+        }
+        .b-btn:active { transform: translateY(2px); box-shadow: none; }
+
+        /* --- UI OVERLAYS --- */
+        #main-menu, #settings-modal, #overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(18, 18, 20, 0.98); z-index: 5000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             transition: opacity 0.3s;
         }
-        .hidden { display: none !important; }
+        .hidden { opacity: 0; pointer-events: none; }
 
-        .menu-title { font-size: 40px; color: #ffb74d; text-shadow: 4px 4px 0px #3e2723; margin-bottom: 40px; text-align: center; }
-        .menu-btn {
-            background: #3e2723; color: #eceff1; border: 4px solid #5d4037; padding: 18px 30px;
-            font-family: 'Press Start 2P', cursive; font-size: 14px; margin: 10px; cursor: pointer;
-            width: 280px; transition: 0.1s; box-shadow: 0 6px 0 #281a16; text-align: center;
+        .title-txt { font-size: 40px; color: #ffb74d; text-shadow: 4px 4px 0 #3e2723; margin-bottom: 40px; text-align: center; }
+        .ui-btn {
+            background: #3e2723; color: #eceff1; border: 4px solid #5d4037; padding: 20px 40px;
+            font-family: 'Press Start 2P'; font-size: 16px; margin: 10px; cursor: pointer; width: 300px;
+            text-align: center; box-shadow: 0 6px 0 #281a16;
         }
-        .menu-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #281a16; }
+        .ui-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #000; }
 
-        #overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; display:none; justify-content:center; align-items:center; flex-direction:column; backdrop-filter: blur(5px); }
-        .victory-text { font-size:40px; color: #ffd700; text-shadow: 0 5px 0 #b26500; animation:bounce 1s infinite; margin-bottom: 20px; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        
+        #dev-console { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; color: #0f0; padding: 5px; font-family: monospace; display: none; z-index: 9999; }
+        #dev-input { background: transparent; border: none; color: #0f0; width: 90%; outline: none; font-size: 14px; }
         .dust { position: absolute; background: #fff; border-radius: 50%; opacity: 0.1; animation: float 10s infinite linear; pointer-events: none; }
-        
-        #dev-console { position: fixed; top: 0; left: 0; width: 100%; background: rgba(0,0,0,0.95); color: #0f0; padding: 10px; display: none; z-index: 9999; border-bottom: 2px solid #0f0; font-family: monospace; }
-        #dev-input { background: transparent; border: none; color: #0f0; width: 85%; outline: none; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div style="position:absolute; width:100%; height:100%; overflow:hidden; pointer-events:none;">
-    <div class="dust" style="left:10%; top:-10%; width:4px; height:4px; animation-duration:8s;"></div>
-    <div class="dust" style="left:70%; top:-15%; width:3px; height:3px; animation-duration:15s;"></div>
+<div style="position:absolute; width:100%; height:100%; pointer-events:none; overflow:hidden;">
+    <div class="dust" style="left:20%; top:20%; width:4px; height:4px; animation-duration:10s;"></div>
+    <div class="dust" style="left:80%; top:50%; width:3px; height:3px; animation-duration:15s;"></div>
 </div>
 
 <div id="main-menu">
-    <div class="menu-title">COZY CHAOS<br>CHESS</div>
-    <button class="menu-btn" onclick="startGame('pve')">CAMPAIGN (PvE)</button>
-    <button class="menu-btn" onclick="startGame('pvp')">VERSUS (PvP)</button>
-    <button class="menu-btn" onclick="openSettings()">SETTINGS</button>
+    <div class="title-txt">COZY CHAOS<br>CHESS</div>
+    <button class="ui-btn" onclick="startGame('pve')">CAMPAIGN (PvE)</button>
+    <button class="ui-btn" onclick="startGame('pvp')">VERSUS (PvP)</button>
+    <button class="ui-btn" onclick="openSettings()">SETTINGS</button>
 </div>
 
 <div id="settings-modal" class="hidden">
-    <div class="menu-title" style="font-size: 24px;">SETTINGS</div>
-    <button class="menu-btn" id="btn-difficulty" style="width: 220px;" onclick="cycleDifficulty()">BOT: EASY</button>
-    <button class="menu-btn" onclick="closeSettings()">BACK</button>
+    <div class="title-txt" style="font-size:24px;">SETTINGS</div>
+    <button class="ui-btn" id="btn-difficulty" onclick="cycleDifficulty()">BOT: EASY</button>
+    <button class="ui-btn" onclick="closeSettings()">BACK</button>
 </div>
 
-<div id="dev-console"><span>ADMIN >> </span><input type="text" id="dev-input"></div>
+<div id="overlay" class="hidden">
+    <div class="title-txt" id="overlay-title" style="color:#ffd700;">VICTORY</div>
+    <div id="overlay-sub" style="color:#fff; margin-bottom:40px; font-family:'Crimson Text'; font-size:24px; text-align:center;"></div>
+    <button class="ui-btn" style="background:#4caf50;" onclick="nextLevel()">CONTINUE</button>
+</div>
 
-<div id="desk">
-    <div id="board-container">
-        <div id="ui-status">LEVEL <span id="level-num">1</span> &bull; <span id="turn-text">PLAYER TURN</span></div>
-        <div id="board-frame">
-            <div id="play-area">
-                <canvas id="gameCanvas" width="512" height="512"></canvas>
-                <!-- GRID LAYER: This handles all clicks -->
-                <div id="click-layer"></div>
+<div id="dev-console"><input type="text" id="dev-input" style="width:100%; background:transparent; border:none; color:#0f0; outline:none;" placeholder="Admin Command..."></div>
+<button onclick="toggleDev()" style="position:fixed; bottom:10px; right:10px; background:#333; color:#0f0; border:1px solid #0f0; padding:8px 12px; z-index:9999; cursor:pointer;">>_</button>
+
+<div id="game-scaler">
+    <div id="desk">
+        
+        <!-- BOARD -->
+        <div id="board-wrapper">
+            <div id="ui-status">LEVEL <span id="level-num">1</span> &bull; <span id="turn-text">PLAYER TURN</span></div>
+            <div id="board-frame">
+                <div id="board-grid">
+                    <!-- Tiles injected here -->
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="book-container">
-        <div id="tome">
+        <!-- BOOK -->
+        <div id="book-wrapper">
             <div id="book-cover" onclick="openBook()">
-                <div class="cover-decor">
-                    <div style="font-size: 60px; color: #ffb74d;">&#9818;</div>
-                    <div class="cover-title">Rules<br>&<br>Chaos</div>
-                    <div style="font-size: 10px; color: #8d6e63; font-family: 'Press Start 2P';">[ TAP TO OPEN ]</div>
-                </div>
+                <div class="cover-text" style="font-size:50px;">&#9818;</div>
+                <div class="cover-text">Rules<br>&<br>Chaos</div>
+                <div style="font-size:10px; color:#8d6e63; margin-top:20px;">[ CLICK TO OPEN ]</div>
             </div>
-            <div id="pages-layer">
-                <div id="pages">
-                    <div id="bookmark" style="position:absolute; top:0; right:40px; width:20px; height:80px; background:#bf360c; clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%); z-index:2;"></div>
-                    <div class="rule-num" id="page-num">00</div>
-                    <div class="rule-title" id="page-title">RULE 00</div>
-                    <div class="rule-text" id="page-desc">Loading...</div>
-                    <div class="rule-fluff" id="page-fluff"></div>
-                    <div class="nav-controls">
-                        <button class="book-btn" id="btn-prev" onclick="prevPage(event)">CLOSE BOOK</button>
-                        <span id="page-count" style="font-size:10px; color:#aaa; align-self:center;">1/1</span>
-                        <button class="book-btn" id="btn-next" onclick="nextPage(event)">NEXT &gt;</button>
-                    </div>
+            <div id="book-pages">
+                <div style="position:absolute; top:0; right:30px; width:20px; height:60px; background:#bf360c;"></div>
+                <div class="rule-header" id="page-title">RULE 00</div>
+                <div class="rule-body" id="page-desc">Loading...</div>
+                <div class="book-controls">
+                    <button class="b-btn" id="btn-prev" onclick="pagePrev()">CLOSE</button>
+                    <span id="page-count" style="font-size:10px; align-self:center;">1/1</span>
+                    <button class="b-btn" id="btn-next" onclick="pageNext()">NEXT &gt;</button>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<div id="overlay">
-    <div class="victory-text" id="overlay-title">VICTORY</div>
-    <div id="overlay-sub" style="color:#fff; margin-bottom:40px; font-family:'Crimson Text',serif; font-size:20px;"></div>
-    <button class="menu-btn" style="background:#4caf50;" onclick="nextLevel()">CONTINUE</button>
+    </div>
 </div>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-
-    // --- AUTO SCALING ---
-    function fitScreen() {
-        const desk = document.getElementById('desk');
-        const scale = Math.min(window.innerWidth / 1100, window.innerHeight / 750);
-        const finalScale = scale > 1 ? 1 : scale * 0.95; 
-        desk.style.transform = `scale(${finalScale})`;
+    const SPRITES = {};
+    const COLORS = { blue: '#64b5f6', red: '#e57373', gold: '#ffd54f' };
+    
+    function generateSprites() {
+        ['blue', 'red'].forEach(team => {
+            SPRITES[team] = {};
+            ['pawn','rook','knight','bishop','queen','king'].forEach(type => {
+                const c = document.createElement('canvas'); c.width=64; c.height=64; const x = c.getContext('2d');
+                const main = team==='blue' ? COLORS.blue : COLORS.red;
+                const r = (px,py,w,h,col) => { x.fillStyle=col; x.fillRect(px*2,py*2,w*2,h*2); };
+                r(6,26,20,4,'rgba(0,0,0,0.3)'); 
+                if(type==='pawn'){ r(10,12,12,12,main); r(12,14,8,4,'#fff'); r(14,8,4,4,COLORS.gold); r(8,24,16,4,'#546e7a'); }
+                else if(type==='rook'){ r(8,8,16,20,'#78909c'); r(6,6,4,6,main); r(22,6,4,6,main); r(10,12,4,4,'#37474f'); r(18,12,4,4,'#37474f'); }
+                else if(type==='knight'){ r(8,8,12,10,main); r(10,10,2,2,'#fff'); r(12,6,4,4,'#fff'); r(14,18,8,8,main); r(8,26,16,4,'#546e7a'); }
+                else if(type==='bishop'){ r(12,4,8,10,main); r(10,14,12,12,'#546e7a'); r(14,16,4,4,'#fff'); r(22,6,2,22,COLORS.gold); }
+                else if(type==='queen'){ r(10,6,12,6,COLORS.gold); r(14,4,4,4,'#e91e63'); r(8,12,16,16,main); r(12,14,8,6,'#ffccbc'); }
+                else if(type==='king'){ r(8,4,16,8,COLORS.gold); r(8,12,16,16,main); r(12,14,8,6,'#ffccbc'); r(12,20,8,6,'#fff'); }
+                SPRITES[team][type] = c.toDataURL();
+            });
+        });
+        const m = document.createElement('canvas'); m.width=64; m.height=64; const mx = m.getContext('2d');
+        mx.fillStyle='#37474f'; mx.fillRect(16,24,32,16); mx.fillStyle='#d32f2f'; mx.fillRect(28,20,8,8);
+        SPRITES['mine'] = m.toDataURL();
     }
-    window.addEventListener('resize', fitScreen); fitScreen();
 
-    // --- GRID GENERATION ---
-    function createClickGrid() {
-        const layer = document.getElementById('click-layer');
-        layer.innerHTML = '';
+    const gridEl = document.getElementById('board-grid');
+    const tileEls = [];
+
+    function buildBoardDOM() {
+        gridEl.innerHTML = '';
+        tileEls.length = 0;
         for(let y=0; y<8; y++) {
             for(let x=0; x<8; x++) {
-                const div = document.createElement('div');
-                div.className = 'click-tile';
-                div.dataset.x = x;
-                div.dataset.y = y;
-                div.onclick = (e) => { e.stopPropagation(); handleGridClick(x, y); };
-                layer.appendChild(div);
+                const tile = document.createElement('div');
+                tile.className = `tile ${(x+y)%2===0 ? 'light' : 'dark'}`;
+                // Direct Input
+                tile.onpointerdown = (e) => { e.preventDefault(); handleTileClick(x, y); };
+                
+                const img = document.createElement('div');
+                img.className = 'piece';
+                tile.appendChild(img);
+
+                gridEl.appendChild(tile);
+                tileEls.push(tile);
             }
         }
     }
 
-    // --- AUDIO ---
+    let board = [], turn = 'blue', selected = null, validMoves = [], mines = [];
+    let gameMode = 'pve', botDifficulty = 0, level = 1, activeRules = ['standard'], bookPage = 0;
+    
+    const RULES = [
+        { id: 'standard', num: '00', name: 'STANDARD WARFARE', desc: 'Standard Chess rules apply. Defeat the enemy.', fluff: '"The beginning."' },
+        { id: 'pawn_cardinal', num: '01', name: 'ANXIOUS INFANTRY', desc: 'Pawns can move 1 step in ANY cardinal direction (N,S,E,W).', fluff: '"Versatility."' },
+        { id: 'mines', num: '02', name: 'HOLY WASTE', desc: 'Bishops leave hidden MINES on moved tiles. Stepping on one is fatal.', fluff: '"Explosive."' },
+        { id: 'traitor', num: '03', name: 'THE AFFAIR', desc: 'You can move the Opponent\'s Queen as if she were your own.', fluff: '"Betrayal."' },
+        { id: 'cannibal', num: '04', name: 'LUNCH BREAK', desc: 'Rooks capture friendly pieces. Moving off-board removes them.', fluff: '"Sacrifice."' },
+        { id: 'heir', num: '05', name: 'THE CYCLE', desc: 'If King dies, a random friendly unit becomes the new King.', fluff: '"Succession."' },
+        { id: 'ascension', num: '06', name: 'ASCENSION', desc: 'Pawns that reach the final rank disappear (Ascend to glory).', fluff: '"Free."' },
+        { id: 'mirror', num: '07', name: 'MIRROR WORLD', desc: 'Capturing with a Queen reverses the board vertically.', fluff: '"Flip."' },
+        { id: 'jumper', num: '08', name: 'SUPER JUMPERS', desc: 'Knights jump 4 spaces in an L-shape.', fluff: '"Leg day."' }
+    ];
+
     const Sfx = {
         ctx: null,
         init() { if(!this.ctx) { window.AudioContext = window.AudioContext || window.webkitAudioContext; this.ctx = new AudioContext(); } },
-        play(freq, type, dur, vol=1.0) {
+        play(freq, type, dur) {
             if(!this.ctx) return;
             const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
             o.type = type; o.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            g.gain.setValueAtTime(vol, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+dur);
+            g.gain.setValueAtTime(0.3, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+dur);
             o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+dur);
         }
     };
 
-    // --- GAME VARS ---
-    let board = [], turn = 'blue', selected = null, validMoves = [], mines = [];
-    let gameMode = 'pve', botDifficulty = 0, level = 1, activeRules = ['standard'], bookPage = 0;
-    const SPRITES = {}, TILE = 64;
-    const RULES = [
-        { id: 'standard', num: '00', desc: 'Standard Chess rules. Defeat enemy to unlock pages.', fluff: '"Calm before the storm."' },
-        { id: 'pawn_cardinal', num: '01', desc: 'Pawns move 1 step in ANY cardinal direction (N,S,E,W).', fluff: '"Small minded but versatile."' },
-        { id: 'mines', num: '02', desc: 'Bishops leave MINES when they move. Stepping on one is fatal.', fluff: '"Faith is explosive."' },
-        { id: 'traitor', num: '03', desc: 'You can move the Opponent\'s Queen as your own.', fluff: '"Love knows no borders."' },
-        { id: 'cannibal', num: '04', desc: 'Rooks capture friendly pieces. Edge-moves remove them.', fluff: '"Working overtime."' },
-        { id: 'heir', num: '05', desc: 'If King dies, a random unit becomes King.', fluff: '"The crown remains."' },
-        { id: 'ascension', num: '06', desc: 'Pawns on final rank disappear (Ascend).', fluff: '"Finally free."' },
-        { id: 'mirror', num: '07', desc: 'Queen capture reverses the board.', fluff: '"Tides turn."' },
-        { id: 'jumper', num: '08', desc: 'Knights jump 4 spaces (Long L).', fluff: '"Leg day."' }
-    ];
+    function renderBoard() {
+        tileEls.forEach(t => {
+            t.className = t.className.replace(/ selected| valid| capture/g, '');
+            const pDiv = t.querySelector('.piece');
+            pDiv.style.backgroundImage = 'none';
+            pDiv.classList.remove('bob');
+        });
 
-    function cycleDifficulty() { botDifficulty = (botDifficulty + 1) % 4; document.getElementById('btn-difficulty').innerText = "BOT: " + ['EASY','MEDIUM','HARD','EXTREME'][botDifficulty]; }
-    function openSettings() { document.getElementById('settings-modal').classList.remove('hidden'); }
-    function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
+        for(let y=0; y<8; y++) {
+            for(let x=0; x<8; x++) {
+                const idx = y*8 + x;
+                const tile = tileEls[idx];
+                const p = board[y][x];
+                const pDiv = tile.querySelector('.piece');
 
-    function startGame(mode) { 
-        gameMode = mode; Sfx.init(); document.getElementById('main-menu').classList.add('hidden'); 
-        if(mode==='pve'){ level=1; activeRules=['standard']; } initLevel(); renderPage(); 
-    }
-
-    function openBook() { document.getElementById('book-container').classList.add('open'); Sfx.play(100, 'sine', 0.5); }
-    function closeBook() { document.getElementById('book-container').classList.remove('open'); Sfx.play(120, 'sine', 0.4); }
-
-    function initLevel() {
-        createClickGrid(); 
-        board = Array(8).fill(null).map(() => Array(8).fill(null));
-        const row = ['rook','knight','bishop','queen','king','bishop','knight','rook'];
-        for(let x=0; x<8; x++) {
-            board[1][x] = {type:'pawn', team:'red', id:Math.random()};
-            board[6][x] = {type:'pawn', team:'blue', id:Math.random()};
-            board[0][x] = {type:row[x], team:'red', id:Math.random()};
-            board[7][x] = {type:row[x], team:'blue', id:Math.random()};
-        }
-        mines = []; turn = 'blue'; selected=null; validMoves=[]; updateUI(); draw();
-    }
-
-    // --- LOGIC ---
-    function getMoves(p, cx, cy, b = board) {
-        let moves = []; let dir = p.team === 'blue' ? -1 : 1;
-        const chk = (x,y) => x>=0 && x<8 && y>=0 && y<8 && b[y][x]===null;
-        
-        if(p.type === 'pawn') {
-            if(chk(cx, cy+dir)) moves.push({x:cx, y:cy+dir});
-            if(((p.team==='blue'&&cy===6)||(p.team==='red'&&cy===1)) && chk(cx,cy+dir) && chk(cx, cy+dir*2)) moves.push({x:cx, y:cy+dir*2});
-            const enemy = (x,y) => x>=0 && x<8 && y>=0 && y<8 && b[y][x] && b[y][x].team !== p.team;
-            if(enemy(cx+1, cy+dir)) moves.push({x:cx+1, y:cy+dir});
-            if(enemy(cx-1, cy+dir)) moves.push({x:cx-1, y:cy+dir});
-            if(activeRules.includes('pawn_cardinal')) [[0,1],[0,-1],[1,0],[-1,0]].forEach(d=>{ if(chk(cx+d[0], cy+d[1])) moves.push({x:cx+d[0], y:cy+d[1]}); });
-        } else if(p.type === 'knight') {
-            let j = activeRules.includes('jumper') ? [[3,1],[3,-1],[-3,1],[-3,-1],[1,3],[1,-3],[-1,3],[-1,-3]] : [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]];
-            j.forEach(d=>{ let tx=cx+d[0], ty=cy+d[1]; if(tx>=0&&tx<8&&ty>=0&&ty<8 && (b[ty][tx]===null || b[ty][tx].team!==p.team)) moves.push({x:tx, y:ty}); });
-        } else {
-            const slide = (dirs, dist) => dirs.forEach(d=>{ for(let i=1; i<=dist; i++){
-                let tx=cx+d[0]*i, ty=cy+d[1]*i; if(tx<0||tx>=8||ty<0||ty>=8) break;
-                if(b[ty][tx]===null) moves.push({x:tx, y:ty});
-                else { if(b[ty][tx].team!==p.team || (activeRules.includes('cannibal')&&p.type==='rook')) moves.push({x:tx, y:ty}); break; }
-            }});
-            if(p.type==='rook'||p.type==='queen') slide([[0,1],[0,-1],[1,0],[-1,0]], 8);
-            if(p.type==='bishop'||p.type==='queen') slide([[1,1],[1,-1],[-1,1],[-1,-1]], 8);
-            if(p.type==='king') slide([[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]], 1);
-        }
-        return moves;
-    }
-
-    function move(sx, sy, tx, ty) {
-        let p = board[sy][sx]; let t = board[ty][tx];
-        if(activeRules.includes('mines') && p.type === 'bishop') mines.push({x:sx, y:sy});
-        if(t) { Sfx.play(150, 'sawtooth', 0.2); if(activeRules.includes('mirror') && p.type === 'queen') board.reverse(); } else Sfx.play(200, 'triangle', 0.1);
-        board[ty][tx] = p; board[sy][sx] = null;
-        if(mines.some(m=>m.x===tx && m.y===ty)) { board[ty][tx] = null; mines = mines.filter(m=>m.x!==tx||m.y!==ty); Sfx.play(60, 'square', 0.3); }
-        
-        if(!findKing('blue')) endGame('red'); else if(!findKing('red')) endGame('blue');
-        else {
-            turn = turn === 'blue' ? 'red' : 'blue'; updateUI();
-            if(gameMode === 'pve' && turn === 'red') setTimeout(botMove, 700);
-        }
-    }
-
-    function findKing(team) { for(let y=0;y<8;y++) for(let x=0;x<8;x++) if(board[y][x]?.team===team && board[y][x]?.type==='king') return true; return false; }
-    function endGame(winner) {
-        Sfx.play(500, 'sine', 0.5);
-        document.getElementById('overlay-title').innerText = (winner==='blue' || gameMode==='pvp') ? "VICTORY" : "DEFEAT";
-        document.getElementById('overlay-title').style.color = (winner==='blue') ? '#ffd54f' : '#e57373';
-        if(gameMode === 'pve' && winner === 'blue') {
-            let r = RULES[level]; if(r) { document.getElementById('overlay-sub').innerText = `UNLOCKED: RULE ${r.num}`; if (!activeRules.includes(r.id)) activeRules.push(r.id); }
-        } else document.getElementById('overlay-sub').innerText = `${winner.toUpperCase()} WINS`;
-        document.getElementById('overlay').style.display = 'flex';
-    }
-
-    function nextLevel() { 
-        if(gameMode==='pve' && document.getElementById('overlay-title').innerText === "VICTORY") { level++; bookPage = activeRules.length - 1; renderPage(); }
-        document.getElementById('overlay').style.display='none'; initLevel();
-    }
-
-    function draw() {
-        ctx.fillStyle = '#2d2d2d'; ctx.fillRect(0,0,512,512); 
-        for(let y=0; y<8; y++) for(let x=0; x<8; x++) {
-            ctx.fillStyle = (x+y)%2 ? '#7fb093' : '#a8d5ba'; 
-            ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
-            if(mines.some(m=>m.x===x && m.y===y)) { ctx.fillStyle='#d32f2f'; ctx.beginPath(); ctx.arc(x*TILE+32,y*TILE+32,10,0,Math.PI*2); ctx.fill(); }
-            
-            let p = board[y][x]; 
-            if(p && SPRITES[p.team] && SPRITES[p.team][p.type]) {
-                ctx.drawImage(SPRITES[p.team][p.type], x*TILE, y*TILE + Math.sin(Date.now()/250 + p.id*10)*2);
+                if(mines.some(m=>m.x===x && m.y===y)) {
+                    pDiv.style.backgroundImage = `url(${SPRITES['mine']})`;
+                }
+                if(p) {
+                    pDiv.style.backgroundImage = `url(${SPRITES[p.team][p.type]})`;
+                    if(p.team === turn) pDiv.classList.add('bob');
+                }
             }
         }
-        
-        // --- SYNC VISUAL GRID ---
-        const tiles = document.getElementsByClassName('click-tile');
-        for (let i = 0; i < tiles.length; i++) {
-            const tx = parseInt(tiles[i].dataset.x);
-            const ty = parseInt(tiles[i].dataset.y);
-            tiles[i].className = 'click-tile'; // Reset
-            
-            if (selected && selected.x === tx && selected.y === ty) tiles[i].classList.add('selected');
-            if (validMoves.some(m => m.x === tx && m.y === ty)) tiles[i].classList.add('valid');
-        }
-        
-        requestAnimationFrame(draw);
+
+        if(selected) tileEls[selected.y*8 + selected.x].classList.add('selected');
+        validMoves.forEach(m => {
+            const t = tileEls[m.y*8 + m.x];
+            t.classList.add('valid');
+            if(board[m.y][m.x]) t.classList.add('capture');
+        });
+
+        document.getElementById('level-num').innerText = level;
+        const tt = document.getElementById('turn-text');
+        tt.innerText = turn==='blue' ? "BLUE TURN" : "RED TURN";
+        tt.style.color = turn==='blue' ? '#64b5f6' : '#e57373';
     }
 
-    // --- GRID INPUT HANDLER ---
-    function handleGridClick(x, y) {
-        if(gameMode==='pve' && turn==='red') return;
+    function handleTileClick(x, y) {
+        if(gameMode === 'pve' && turn === 'red') return; 
         Sfx.init();
 
         let p = board[y][x];
         const isMyPiece = p && (p.team === turn || (activeRules.includes('traitor') && p.type === 'queen'));
         
         if(selected) {
-            let m = validMoves.find(mv=>mv.x===x && mv.y===y);
-            if(m) { move(selected.x, selected.y, x, y); selected = null; validMoves = []; }
-            else if(isMyPiece) { selected = {x,y}; validMoves = getMoves(p, x, y); } 
-            else { selected = null; validMoves = []; }
-        } else if(isMyPiece) { 
-            selected = {x,y}; validMoves = getMoves(p, x, y); 
+            let match = validMoves.find(m => m.x === x && m.y === y);
+            if(match) {
+                executeMove(selected.x, selected.y, x, y);
+                selected = null; validMoves = [];
+                renderBoard();
+                return;
+            }
         }
-    }
 
-    function updateUI() { document.getElementById('level-num').innerText = level; document.getElementById('turn-text').innerText = turn==='blue'?"BLUE TURN":"RED TURN"; document.getElementById('turn-text').style.color = turn==='blue'?'#64b5f6':'#e57373'; }
-
-    function renderPage() {
-        let r = RULES.find(rule => rule.id === activeRules[bookPage]) || RULES[0];
-        document.getElementById('page-num').innerText = r.num;
-        document.getElementById('page-title').innerText = "RULE " + r.num;
-        document.getElementById('page-desc').innerText = r.desc;
-        document.getElementById('page-fluff').innerText = r.fluff;
-        document.getElementById('page-count').innerText = `${bookPage+1}/${activeRules.length}`;
-        document.getElementById('btn-prev').innerText = bookPage === 0 ? "CLOSE BOOK" : "< PREV";
-        document.getElementById('btn-next').disabled = bookPage === activeRules.length - 1;
-    }
-    
-    function prevPage(e) { 
-        if(e) e.stopPropagation(); // CRITICAL: Stop bubbling
-        if(bookPage > 0) { bookPage--; Sfx.play(600,'sine',0.2); renderPage(); } 
-        else closeBook(); 
-    }
-    function nextPage(e) { 
-        if(e) e.stopPropagation();
-        if(bookPage < activeRules.length-1) { bookPage++; Sfx.play(600,'sine',0.2); renderPage(); } 
-    }
-
-    // --- AI ---
-    function botMove() {
-        if(botDifficulty === 0) {
-            let pieces = []; for(let y=0;y<8;y++) for(let x=0;x<8;x++) if(board[y][x]?.team==='red') pieces.push({x,y,p:board[y][x]});
-            pieces.sort(()=>Math.random()-0.5);
-            for(let pc of pieces) { let m=getMoves(pc.p,pc.x,pc.y); if(m.length){ let k=m[Math.floor(Math.random()*m.length)]; move(pc.x,pc.y,k.x,k.y); return; } }
+        if(isMyPiece) {
+            selected = {x, y};
+            validMoves = getMoves(p, x, y);
+            Sfx.play(600, 'triangle', 0.05);
         } else {
-            let depth = botDifficulty + 1;
-            let best = minimax(board, depth, true, -99999, 99999);
-            if(best.move) move(best.move.sx, best.move.sy, best.move.tx, best.move.ty);
-            else { botDifficulty=0; botMove(); }
+            selected = null; validMoves = [];
+        }
+        renderBoard();
+    }
+
+    function executeMove(sx, sy, tx, ty) {
+        let p = board[sy][sx]; let t = board[ty][tx];
+        
+        if(t) Sfx.play(150, 'sawtooth', 0.2); else Sfx.play(300, 'sine', 0.1);
+
+        if(activeRules.includes('mines') && p.type === 'bishop') mines.push({x:sx, y:sy});
+
+        board[ty][tx] = p; board[sy][sx] = null;
+
+        let mIdx = mines.findIndex(m => m.x===tx && m.y===ty);
+        if(mIdx !== -1) { board[ty][tx] = null; mines.splice(mIdx, 1); Sfx.play(100, 'square', 0.4); }
+
+        if(t && activeRules.includes('mirror') && p.type === 'queen') board.reverse();
+
+        if(!findKing('blue')) endGame('red'); 
+        else if(!findKing('red')) endGame('blue');
+        else {
+            turn = turn === 'blue' ? 'red' : 'blue';
+            renderBoard();
+            if(gameMode === 'pve' && turn === 'red') setTimeout(botMove, 700);
         }
     }
 
-    function minimax(b, d, maxing, alpha, beta) {
-        if(d === 0) return { score: evaluate(b, 'red') };
-        let bestM = null; let bestScore = maxing ? -99999 : 99999;
-        
-        let moves = [];
-        for(let y=0;y<8;y++) for(let x=0;x<8;x++) {
-            let p = b[y][x];
-            if(p && p.team === (maxing?'red':'blue')) {
-                let mvs = getMoves(p, x, y, b);
-                for(let m of mvs) moves.push({sx:x, sy:y, tx:m.x, ty:m.y});
+    function getMoves(p, cx, cy, b = board) {
+        let m = []; let dir = p.team === 'blue' ? -1 : 1;
+        const free = (x,y) => x>=0&&x<8&&y>=0&&y<8 && b[y][x]===null;
+        const enemy = (x,y) => x>=0&&x<8&&y>=0&&y<8 && b[y][x] && b[y][x].team !== p.team;
+
+        if(p.type === 'pawn') {
+            if(free(cx, cy+dir)) m.push({x:cx, y:cy+dir});
+            if(((p.team==='blue'&&cy===6)||(p.team==='red'&&cy===1)) && free(cx,cy+dir) && free(cx, cy+dir*2)) m.push({x:cx, y:cy+dir*2});
+            if(enemy(cx+1, cy+dir)) m.push({x:cx+1, y:cy+dir});
+            if(enemy(cx-1, cy+dir)) m.push({x:cx-1, y:cy+dir});
+            if(activeRules.includes('pawn_cardinal')) [[0,1],[0,-1],[1,0],[-1,0]].forEach(d=>{ if(free(cx+d[0], cy+d[1])) m.push({x:cx+d[0], y:cy+d[1]}); });
+        } else if(p.type === 'knight') {
+            let j = activeRules.includes('jumper') ? [[3,1],[3,-1],[-3,1],[-3,-1],[1,3],[1,-3],[-1,3],[-1,-3]] : [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]];
+            j.forEach(d=>{ let tx=cx+d[0], ty=cy+d[1]; if(tx>=0&&tx<8&&ty>=0&&ty<8 && (!b[ty][tx] || b[ty][tx].team!==p.team)) m.push({x:tx, y:ty}); });
+        } else {
+            let dirs = [];
+            if(p.type!=='bishop') dirs.push([0,1],[0,-1],[1,0],[-1,0]);
+            if(p.type!=='rook') dirs.push([1,1],[1,-1],[-1,1],[-1,-1]);
+            let dist = p.type==='king' ? 1 : 8;
+            dirs.forEach(d=>{ for(let i=1; i<=dist; i++){
+                let tx=cx+d[0]*i, ty=cy+d[1]*i;
+                if(tx<0||tx>7||ty<0||ty>7) break;
+                if(!b[ty][tx]) m.push({x:tx, y:ty});
+                else { if(b[ty][tx].team!==p.team || (activeRules.includes('cannibal')&&p.type==='rook')) m.push({x:tx, y:ty}); break; }
+            }});
+        }
+        return m;
+    }
+
+    function botMove() {
+        let pieces = []; for(let y=0; y<8; y++) for(let x=0; x<8; x++) if(board[y][x]?.team==='red') pieces.push({x,y,p:board[y][x]});
+        if(pieces.length === 0) return; 
+
+        pieces.sort(()=>Math.random()-0.5);
+        let bestMove = null;
+
+        for(let pc of pieces) {
+            let mvs = getMoves(pc.p, pc.x, pc.y);
+            for(let m of mvs) { if(board[m.y][m.x] && board[m.y][m.x].team === 'blue') { bestMove={sx:pc.x, sy:pc.y, tx:m.x, ty:m.y}; break; } }
+            if(bestMove) break;
+        }
+        if(!bestMove) {
+            for(let pc of pieces) {
+                let mvs = getMoves(pc.p, pc.x, pc.y);
+                if(mvs.length > 0) { bestMove={sx:pc.x, sy:pc.y, tx:mvs[0].x, ty:mvs[0].y}; break; }
             }
         }
-        
-        if(moves.length === 0) return { score: maxing ? -99999 : 99999 };
 
-        for(let m of moves) {
-            let t = b[m.ty][m.tx]; let s = b[m.sy][m.sx]; b[m.ty][m.tx] = s; b[m.sy][m.sx] = null;
-            let res = minimax(b, d-1, !maxing, alpha, beta);
-            b[m.sy][m.sx] = s; b[m.ty][m.tx] = t;
+        if(bestMove) executeMove(bestMove.sx, bestMove.sy, bestMove.tx, bestMove.ty);
+        else { turn = 'blue'; renderBoard(); } 
+    }
 
-            if(maxing) { if(res.score > bestScore) { bestScore = res.score; bestM = m; } alpha = Math.max(alpha, bestScore); }
-            else { if(res.score < bestScore) { bestScore = res.score; bestM = m; } beta = Math.min(beta, bestScore); }
-            if(beta <= alpha) break;
+    function openBook() { document.getElementById('book-wrapper').classList.add('open'); Sfx.play(300, 'sine', 0.2); }
+    function closeBook() { document.getElementById('book-wrapper').classList.remove('open'); Sfx.play(200, 'sine', 0.2); }
+    function pagePrev() { if(bookPage > 0) { bookPage--; updateBook(); } else closeBook(); }
+    function pageNext() { if(bookPage < activeRules.length-1) { bookPage++; updateBook(); } }
+
+    function updateBook() {
+        let r = RULES.find(x => x.id === activeRules[bookPage]) || RULES[0];
+        document.getElementById('page-title').innerText = "RULE " + r.num + "\n" + r.name;
+        document.getElementById('page-desc').innerText = r.desc + "\n\n" + r.fluff;
+        document.getElementById('page-count').innerText = (bookPage+1) + "/" + activeRules.length;
+        document.getElementById('btn-prev').innerText = bookPage === 0 ? "CLOSE" : "< PREV";
+        document.getElementById('btn-next').disabled = bookPage === activeRules.length - 1;
+        Sfx.play(600, 'triangle', 0.05);
+    }
+
+    function initLevel() {
+        board = Array(8).fill(null).map(() => Array(8).fill(null));
+        const r = ['rook','knight','bishop','queen','king','bishop','knight','rook'];
+        for(let x=0; x<8; x++) {
+            board[1][x] = {type:'pawn', team:'red', id:Math.random()};
+            board[6][x] = {type:'pawn', team:'blue', id:Math.random()};
+            board[0][x] = {type:r[x], team:'red', id:Math.random()};
+            board[7][x] = {type:r[x], team:'blue', id:Math.random()};
         }
-        return { score: bestScore, move: bestM };
+        mines = []; turn = 'blue'; selected = null; validMoves = [];
+        renderBoard();
     }
 
-    function evaluate(b, team) {
-        let s = 0; const v = { pawn:10, knight:30, bishop:30, rook:50, queen:90, king:900 };
-        for(let y=0; y<8; y++) for(let x=0; x<8; x++) {
-            let p = b[y][x]; if(p) {
-                let val = v[p.type] + (p.type==='pawn' ? (p.team==='red'?y:7-y) : 0);
-                s += p.team === 'red' ? val : -val;
-            }
+    function startGame(mode) { 
+        gameMode = mode; Sfx.init(); document.getElementById('main-menu').classList.add('hidden'); 
+        if(mode==='pve'){ level=1; activeRules=['standard']; } initLevel(); updateBook(); 
+    }
+
+    function findKing(team) { for(let y=0;y<8;y++) for(let x=0;x<8;x++) if(board[y][x]?.team===team && board[y][x]?.type==='king') return true; return false; }
+    function endGame(winner) {
+        document.getElementById('overlay-title').innerText = winner === 'blue' ? "VICTORY" : "DEFEAT";
+        document.getElementById('overlay-title').style.color = winner === 'blue' ? '#ffd54f' : '#e57373';
+        document.getElementById('overlay').classList.remove('hidden');
+        if(winner === 'blue' && gameMode === 'pve') {
+            let r = RULES[level]; if(r && !activeRules.includes(r.id)) { document.getElementById('overlay-sub').innerText = "UNLOCKED: " + r.name; activeRules.push(r.id); }
         }
-        return s;
     }
-
-    function generateSprites() {
-        ['blue', 'red'].forEach(team => {
-            SPRITES[team] = {};
-            ['pawn','rook','knight','bishop','queen','king'].forEach(type => {
-                const c = document.createElement('canvas'); c.width=64; c.height=64; const x = c.getContext('2d');
-                const main = team==='blue'?'#64b5f6':'#e57373';
-                const r = (px,py,w,h,col) => { x.fillStyle=col; x.fillRect(px*2,py*2,w*2,h*2); };
-                r(6,26,20,4,'rgba(0,0,0,0.3)');
-                if(type==='pawn'){ r(10,12,12,12,main); r(12,14,8,4,'#fff'); r(14,8,4,4,'#ffd54f'); }
-                else if(type==='rook'){ r(8,8,16,20,'#78909c'); r(6,6,4,6,main); r(22,6,4,6,main); }
-                else if(type==='knight'){ r(8,8,12,10,main); r(10,10,2,2,'#fff'); r(14,18,8,8,main); }
-                else if(type==='bishop'){ r(12,4,8,10,main); r(10,14,12,12,'#546e7a'); r(22,6,2,22,'#ffd54f'); }
-                else if(type==='queen'){ r(10,6,12,6,'#ffd54f'); r(8,12,16,16,main); r(12,14,8,6,'#ffccbc'); }
-                else if(type==='king'){ r(8,4,16,8,'#ffd54f'); r(8,12,16,16,main); r(12,20,8,6,'#fff'); }
-                SPRITES[team][type] = c;
-            });
-        });
-        const m = document.createElement('canvas'); m.width=64; m.height=64; const mx = m.getContext('2d');
-        mx.fillStyle='#37474f'; mx.fillRect(16,24,32,16); mx.fillStyle='#d32f2f'; mx.fillRect(28,20,8,8);
-        SPRITES['mine'] = m;
+    function nextLevel() { 
+        if(document.getElementById('overlay-title').innerText === "VICTORY" && gameMode === 'pve') level++; 
+        document.getElementById('overlay').classList.add('hidden'); initLevel(); 
     }
+    function openSettings() { document.getElementById('settings-modal').classList.remove('hidden'); }
+    function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
+    function cycleDifficulty() { botDifficulty = (botDifficulty + 1) % 4; document.getElementById('btn-difficulty').innerText = "BOT: " + ['EASY','MEDIUM','HARD','EXTREME'][botDifficulty]; }
 
-    generateSprites(); 
+    function fitScreen() {
+        const scaler = document.getElementById('game-scaler');
+        const scale = Math.min(window.innerWidth/1250, window.innerHeight/850);
+        scaler.style.transform = `scale(${scale > 1 ? 1 : scale * 0.95})`;
+    }
+    window.addEventListener('resize', fitScreen); fitScreen();
+
+    function toggleDev() {
+        let c = document.getElementById('dev-console');
+        c.style.display = c.style.display==='block'?'none':'block'; 
+        if(c.style.display==='block') document.getElementById('dev-input').focus();
+    }
     document.addEventListener('keydown', (e) => {
-        if(e.key === '`') { let c = document.getElementById('dev-console'); c.style.display = c.style.display==='block'?'none':'block'; }
+        if(e.key === '`') toggleDev();
         if(e.key === 'Enter' && document.getElementById('dev-console').style.display==='block') {
             let cmd = document.getElementById('dev-input').value;
-            if(cmd==='win') endGame('blue'); if(cmd==='unlock') { activeRules=RULES.map(r=>r.id); renderPage(); }
+            if(cmd==='win') endGame('blue'); if(cmd==='unlock') { activeRules=RULES.map(r=>r.id); updateBook(); }
             if(cmd==='reset') location.reload();
             document.getElementById('dev-input').value = '';
         }
     });
+
+    generateSprites(); buildBoardDOM();
 </script>
 </body>
 </html>
